@@ -9,10 +9,12 @@ Built by the [Institute for AI Policy and Strategy (IAPS)](https://www.iaps.ai/)
 quantify how capable current closed- and open-source models are at this task, as input
 to the question of whether BIS should adopt LLM assistance for classification.
 
-> **Status: early scaffold.** The evaluation harness, ECCN scoring, and model adapters
-> are implemented and tested. The labeled question set is **not yet built** — the
-> bundled example data is intentionally unverified (see [Dataset](#dataset)). Do not
-> cite any accuracy numbers until a human-verified set exists.
+> **Status: early scaffold + candidate dataset.** The evaluation harness, ECCN scoring,
+> and model adapters are implemented and tested. A first batch of **29 candidate
+> questions** ([`data/questions.jsonl`](data/questions.jsonl)) has been sourced from
+> manufacturer self-classifications — but **every row is `verified: false`** pending
+> human confirmation against its source. Do not cite any accuracy numbers until those
+> labels are verified (see [Dataset](#dataset)).
 
 ---
 
@@ -82,9 +84,17 @@ ECCNs are strong candidate labels that a human must confirm before they count. T
 `verified` flag enforces this: `--verified-only` drops everything unconfirmed, and
 **every reported number must use it**.
 
-The bundled [`data/questions.example.jsonl`](data/questions.example.jsonl) is entirely
-unverified, illustrative fixtures for exercising the harness — never a result. Full
-schema and sourcing methodology: [`data/schema.md`](data/schema.md).
+**Candidate set.** [`data/questions.jsonl`](data/questions.jsonl) holds 29 real products
+sourced from vendor export-classification pages/tools (Thorlabs, Analog Devices,
+Microchip, Digi-Key), spanning 8 distinct ECCNs across Categories 3/5/6 plus EAR99. Each
+row carries its `source_url` and a verbatim source quote in `notes`. **All are
+`verified: false`** — they are candidate labels awaiting human confirmation, not results.
+Two near-identical Ethernet PHYs are deliberately flagged with conflicting published
+ECCNs (a real classification edge case to resolve during verification).
+
+The bundled [`data/questions.example.jsonl`](data/questions.example.jsonl) is a separate,
+fully synthetic illustrative set for exercising the harness — never a result. Full schema
+and sourcing methodology: [`data/schema.md`](data/schema.md).
 
 ```bash
 # Validate a dataset file and see category coverage
