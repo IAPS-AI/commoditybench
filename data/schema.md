@@ -46,9 +46,21 @@ ECCN on their export-compliance pages.
 publish ECCN information for their products:
 <https://www.bis.gov/licensing/classify-your-item/publicly-available-classification-information>.
 That is the canonical, authoritative entry point — work outward from the companies it
-links. Beyond it, most large hardware vendors publish ECCN/HTS matrices on their
-"export compliance" or "product classification" pages (search
-`"ECCN" <vendor> export compliance`).
+links. The list (archived at `ccats-website-table-april-2018.pdf`) is distilled by CCL
+category in [`sources/bis-listed-eccn-publishers.md`](sources/bis-listed-eccn-publishers.md),
+which is the sourcing plan. Beyond it, manufacturer "export compliance" pages and
+distributor aggregators (Digi-Key, Mouser) are acceptable *fallbacks* with weaker
+provenance.
+
+**Two hard rules (learned the hard way):**
+1. **Provenance must be human-checkable.** The `source_url` must actually *display* the
+   ECCN to a person who opens it. A value scraped from a page's backend data field that a
+   human can't see on the page does **not** qualify — even if the number is right. (This
+   sank the round-1 Thorlabs items: thorlabs.com served the ECCN via a hidden data field,
+   not visible text.) When the page doesn't show it, find a document that does (e.g. a
+   purchase invoice listing the ECCN) and cite that instead.
+2. **Prefer companies on the BIS list.** For a BIS-facing benchmark, a self-classification
+   from a company on BIS's own index is more defensible than one from an arbitrary page.
 
 ### ⚠️ The accuracy caveat (read before trusting any label)
 
