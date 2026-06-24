@@ -22,10 +22,6 @@ results/
 .rag_index/
 data/ccl/raw/
 
-# Human verification evidence (purchase invoices etc. — may contain pricing/PII).
-# Held locally; not pushed unless you decide to. The dataset references these by path.
-human-review-sources/
-
 # OS / editor
 .DS_Store
 Thumbs.db
