@@ -96,8 +96,9 @@ def main() -> None:
 
     out.append(
         "> **Bulk-confirm tip:** each source renders ECCNs the same way, so spot-check 2 "
-        "rows per source; if they match, confirm the whole source. The 6 Thorlabs (Tier C) "
-        "need an invoice or a different human-visible source, else drop.\n"
+        "rows per source; if they match, confirm the whole source. Any Tier C row (ECCN "
+        "not human-visible on the source) needs an invoice or another human-visible "
+        "source, else drop.\n"
     )
 
     out.append("## Decision table\n")

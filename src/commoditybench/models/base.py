@@ -60,9 +60,12 @@ class ClassifierModel(ABC):
     def _parse(text: str, usage: dict) -> Prediction:
         """Parse the assistant text into a :class:`Prediction`.
 
-        Tries strict JSON first, then a lenient ``{...}`` slice, then falls back to
-        scanning free text for an ECCN so a chatty model still gets scored.
+        Strips any reasoning trace first (so a thinking model's discarded
+        intermediate ECCNs can't pollute extraction), then tries strict JSON, then a
+        lenient ``{...}`` slice, then falls back to scanning free text for an ECCN so a
+        chatty model still gets scored.
         """
+        text = _strip_reasoning(text)
         obj = _try_json(text)
         if obj is not None and isinstance(obj.get("eccn"), str):
             return Prediction(
@@ -81,6 +84,20 @@ class ClassifierModel(ABC):
             parsed_ok=False,
             usage=usage,
         )
+
+
+def _strip_reasoning(text: str) -> str:
+    """Drop a reasoning model's chain-of-thought before parsing.
+
+    Hybrid reasoning models (e.g. Qwen3 via vLLM) prepend a ``<think>...</think>``
+    trace to the answer in the ``content`` field. That trace routinely contains braces
+    and candidate ECCNs the model ultimately rejects, which would corrupt both the JSON
+    slice and the prose fallback. The final answer is whatever follows the last closing
+    tag; if the trace is unclosed (truncated), leave the text alone for the fallback.
+    """
+    if "</think>" in text:
+        return text.rsplit("</think>", 1)[-1].strip()
+    return text
 
 
 def _try_json(text: str) -> Optional[dict]:

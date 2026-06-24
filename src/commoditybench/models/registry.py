@@ -41,6 +41,24 @@ _REGISTRY: dict[str, Callable[[str], ClassifierModel]] = {
     # --- Google (Gemini) ---
     "gemini-2.0-flash": _gemini("gemini-2.0-flash"),
     "gemini-1.5-pro": _gemini("gemini-1.5-pro"),
+    # --- Open weights via RunPod public endpoints (OpenAI-compatible) ---
+    # RunPod's hosted LLM menu is small; Qwen3-32B is the strongest text model.
+    # Run in thinking mode with the sampling settings the Qwen3 model card requires
+    # (temp 0.6 / top_p 0.95 / top_k 20); greedy decoding is explicitly discouraged in
+    # thinking mode (repetition/degradation). Thinking is on by default, so the response
+    # carries a <think> trace and json_schema can't be enforced -> structured="none";
+    # the base parser strips the trace and recovers the answer JSON. Budget is large
+    # enough for the trace plus the answer.
+    "qwen3-32b": _openai(
+        "Qwen/Qwen3-32B-AWQ",
+        base_url="https://api.runpod.ai/v2/qwen3-32b-awq/openai/v1",
+        api_key_env="RUNPOD_API_KEY",
+        structured="none",
+        temperature=0.6,
+        top_p=0.95,
+        max_tokens=16384,
+        extra_body={"top_k": 20, "min_p": 0},
+    ),
 }
 
 
