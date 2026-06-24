@@ -99,6 +99,22 @@
   .modelpick button{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
     border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:var(--mono)}
   .modelpick button.active{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+
+  /* leaderboard */
+  table.board td, table.board th{padding:13px 16px}
+  table.board th{text-align:right}
+  table.board th:first-child{text-align:left}
+  .rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;
+    background:var(--panel-2);color:var(--muted);font-family:var(--mono);font-size:12px;margin-right:10px}
+  .rank.r1{background:linear-gradient(140deg,#3a3413,#2a2310);color:#f3c969;border:1px solid #6b521b}
+  .mname{font-family:var(--mono);font-size:13.5px;color:var(--ink)}
+  .cellbar{position:relative;min-width:118px}
+  .cellbar .v{font-family:var(--mono);font-size:13px;text-align:right;display:block}
+  .cellbar .track{height:4px;border-radius:2px;background:var(--panel-2);margin-top:6px;overflow:hidden}
+  .cellbar .track > i{display:block;height:100%;border-radius:2px;background:var(--accent);opacity:.85}
+  .cellbar.best .v{color:var(--exact);font-weight:680}
+  .cellbar.best .track > i{background:var(--exact)}
+  td.numcell{text-align:right;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -112,8 +128,21 @@
     <div class="meta" id="meta"></div>
   </header>
 
+  <div id="board-wrap" style="display:none">
+    <h2>Leaderboard — ranked by mean graded score</h2>
+    <div class="tablecard">
+      <table class="board">
+        <thead><tr id="board-head"></tr></thead>
+        <tbody id="board-body"></tbody>
+      </table>
+    </div>
+    <div class="sub" style="margin-top:12px;font-size:12.5px">⚠ <b>Not equalized:</b> models run on
+      their own native settings (Claude &amp; Qwen3 with reasoning on; GPT-4o at temp 0). Treat this as a
+      capability snapshot, not a controlled head-to-head ranking.</div>
+  </div>
+
   <div id="modelpick-wrap" style="display:none">
-    <h2>Model</h2>
+    <h2>Drill into a model</h2>
     <div class="modelpick" id="modelpick"></div>
   </div>
 
@@ -174,12 +203,48 @@ document.getElementById("meta").innerHTML = [
   `<span class="chip">generated <b>${DATA.generated}</b></span>`,
 ].join("");
 
-// ---- model picker (only if >1)
+// ---- leaderboard + model picker (only if >1 model)
 if (R.models.length > 1){
+  buildLeaderboard();
   document.getElementById("modelpick-wrap").style.display="block";
   document.getElementById("modelpick").innerHTML =
     R.models.map(x=>`<button data-m="${x.model}" class="${x.model===current?'active':''}">${x.model}</button>`).join("");
-  document.querySelectorAll("#modelpick button").forEach(b=>b.onclick=()=>{current=b.dataset.m;render();});
+  document.querySelectorAll("#modelpick button").forEach(b=>b.onclick=()=>{
+    current=b.dataset.m;
+    document.querySelectorAll("#modelpick button").forEach(z=>z.classList.toggle("active",z.dataset.m===current));
+    render();
+  });
+}
+
+function buildLeaderboard(){
+  document.getElementById("board-wrap").style.display="block";
+  const metrics = [
+    {k:"exact_accuracy", l:"Exact"},
+    {k:"eccn_accuracy", l:"ECCN head"},
+    {k:"group_accuracy", l:"Cat+group"},
+    {k:"category_accuracy", l:"Category"},
+    {k:"mean_grade", l:"Mean grade"},
+  ];
+  // best value per metric for highlighting
+  const best = {};
+  metrics.forEach(m=>best[m.k]=Math.max(...R.models.map(x=>x[m.k])));
+  const ranked = R.models.slice().sort((a,b)=>b.mean_grade-a.mean_grade);
+
+  document.getElementById("board-head").innerHTML =
+    `<th>Model</th>` + metrics.map(m=>`<th>${m.l}</th>`).join("") + `<th>Errors</th>`;
+  document.getElementById("board-body").innerHTML = ranked.map((m,i)=>{
+    const cells = metrics.map(mt=>{
+      const v=m[mt.k], isBest=Math.abs(v-best[mt.k])<1e-9;
+      return `<td class="numcell"><div class="cellbar ${isBest?'best':''}">
+        <span class="v">${pct(v)}</span>
+        <div class="track"><i style="width:${(v*100).toFixed(1)}%"></i></div></div></td>`;
+    }).join("");
+    return `<tr>
+      <td><span class="rank ${i===0?'r1':''}">${i+1}</span><span class="mname">${m.model}</span></td>
+      ${cells}
+      <td class="numcell"><span class="gr" style="color:${m.errors?'var(--none)':'var(--exact)'}">${m.errors}</span></td>
+    </tr>`;
+  }).join("");
 }
 
 function render(){
