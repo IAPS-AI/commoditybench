@@ -37,15 +37,28 @@ def _evaluate_model(
     *,
     workers: int,
     retriever=None,
+    agentic: bool = False,
+    ccl_index=None,
     out_dir: Path,
     run_id: str,
 ) -> dict:
     model = build_model(model_name)
+    if agentic and not hasattr(model, "classify_agentic"):
+        raise SystemExit(
+            f"Model {model_name!r} does not support --agentic (no classify_agentic). "
+            "The agentic CCL-navigation condition is currently implemented for the "
+            "Anthropic adapter only."
+        )
     rows: list[dict] = []
 
     def work(q: Question) -> dict:
-        context = retriever.retrieve(q) if retriever is not None else None
-        pred = model.classify(q, context=context)
+        if agentic:
+            from .ccl.tools import CCLToolbox
+
+            pred = model.classify_agentic(q, toolbox=CCLToolbox(ccl_index))
+        else:
+            context = retriever.retrieve(q) if retriever is not None else None
+            pred = model.classify(q, context=context)
         score = score_prediction(pred.predicted_eccn, q.gold_eccn)
         return {
             "id": q.id,
@@ -57,6 +70,7 @@ def _evaluate_model(
             "reasoning": pred.reasoning,
             "parsed_ok": pred.parsed_ok,
             "error": pred.error,
+            "n_tool_calls": len(pred.usage.get("tool_calls", [])) if agentic else 0,
             "usage": pred.usage,
             "score": score.to_dict(),
         }
@@ -136,6 +150,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Inject retrieved CCL excerpts (requires the 'rag' extra + a built index).",
     )
     parser.add_argument(
+        "--agentic",
+        action="store_true",
+        help="Let the model navigate the CCL via tools before answering (Anthropic only; "
+        "requires data/ccl/ccl_index.json — build with commoditybench.ccl.parse_ecfr).",
+    )
+    parser.add_argument(
         "--list-models", action="store_true", help="List enrolled models and exit."
     )
     args = parser.parse_args(argv)
@@ -164,18 +184,28 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
+    if args.rag and args.agentic:
+        parser.error("--rag and --agentic are mutually exclusive conditions.")
+
     retriever = None
     if args.rag:
         from .rag.retriever import CCLRetriever  # lazy: optional dependency
 
         retriever = CCLRetriever()
 
+    ccl_index = None
+    if args.agentic:
+        from .ccl import CCLIndex  # lazy: only needed for the agentic condition
+
+        ccl_index = CCLIndex.load()  # shared read-only index across all questions
+
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    condition = " [RAG]" if args.rag else (" [AGENTIC]" if args.agentic else "")
     print(
         f"Evaluating {len(args.models)} model(s) on {len(questions)} question(s)"
-        f"{' [RAG]' if args.rag else ''}.",
+        f"{condition}.",
         file=sys.stderr,
     )
     summaries = []
@@ -186,6 +216,8 @@ def main(argv: list[str] | None = None) -> int:
                 questions,
                 workers=args.workers,
                 retriever=retriever,
+                agentic=args.agentic,
+                ccl_index=ccl_index,
                 out_dir=out_dir,
                 run_id=args.run_id,
             )
@@ -200,6 +232,7 @@ def main(argv: list[str] | None = None) -> int:
         "n_questions": len(questions),
         "verified_only": args.verified_only,
         "rag": args.rag,
+        "agentic": args.agentic,
         "workers": args.workers,
         "citable": citable,
         "note": (

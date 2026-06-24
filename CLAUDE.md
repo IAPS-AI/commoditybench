@@ -18,8 +18,17 @@ RAG over the CCL, evaluated with vs. without retrieval.
 - **Dataset: 29 candidate questions** in `data/questions.jsonl`, all real products with
   published ECCNs. **Verification is in progress** (see below). 8 distinct ECCNs across
   CCL Categories 3/5/6 + EAR99.
-- **Not done:** finishing human sign-off; expanding categories; building the RAG index;
-  running any eval. **No accuracy numbers exist yet and none should be cited.**
+- **Agentic CCL-navigation tooling: built + tested.** `commoditybench/ccl/` parses the
+  CCL from the eCFR into a navigable index and exposes it as tools the model calls
+  (`--agentic`). First within-model A/B on Claude Opus 4.8 (23 verified Qs) shows a large
+  lift from tools — exact 0.30→0.52, mean grade 0.45→0.60. See
+  `results/agentic_ab_findings.md` for the per-pattern breakdown (tools fix *recall*
+  failures like the 3A991/EAR99 catch-alls; they don't fix the *judgment* call of 5A002
+  vs. mass-market 5A992.c). Two loop-robustness bugs were found and fixed post-run; a
+  confirming re-run is **blocked on Anthropic API credits**.
+- **Not done:** finishing human sign-off; expanding categories; building the RAG index.
+  Accuracy numbers above are over the 23-question verified set and are A/B (tool-lift)
+  results, not an absolute capability claim — keep that framing when citing.
 
 ## Repo map
 
@@ -30,8 +39,13 @@ src/commoditybench/
   prompts.py       # provider-agnostic prompt + answer JSON schema (+ optional RAG context)
   run_eval.py      # CLI: concurrent eval, scoring, aggregation, results
   models/          # base.py (interface + JSON parse/fallback), {anthropic,openai,gemini}_model.py, registry.py
+  ccl/             # AGENTIC condition: parsed CCL + navigation tools the model calls
+                   #   parse_ecfr.py (eCFR XML -> ccl_index.json), index.py (CCLIndex:
+                   #   category_outline/read/search), tools.py (tool specs + CCLToolbox)
   rag/             # stretch: CCL retrieval (retriever.py + build_index.py) — index NOT built yet
 data/
+  ccl/ccl_index.json       # parsed CCL (637 ECCN entries) for the agentic tools; committed
+  ccl/ccl_supp1.xml        # raw eCFR source for the index (reproducibility)
   questions.jsonl          # the candidate dataset (verify before citing)
   questions.example.jsonl  # synthetic fixtures for smoke-testing only (never a result)
   schema.md                # field schema + sourcing methodology + provenance rules
@@ -54,6 +68,11 @@ py -3.12 scripts/make_worksheet.py                            # regen worksheet 
 # Eval (needs provider SDKs + API keys in .env): pip install -e ".[all]"
 PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
   --models claude-opus-4-8 --verified-only --workers 8
+# AGENTIC condition (Claude only): model navigates the CCL via tools before answering.
+PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
+  --models claude-opus-4-8 --verified-only --agentic --workers 4
+# Rebuild the CCL index from the eCFR (already committed; only if it needs refreshing):
+PYTHONPATH=src py -3.12 -m commoditybench.ccl.parse_ecfr --fetch
 ```
 Default Anthropic model is `claude-opus-4-8` (adaptive thinking + structured outputs).
 Headline accuracy is over ALL questions (errors/unparsed = 0); `--verified-only` is
