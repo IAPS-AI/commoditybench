@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CommodityBench — Results</title>
+<style>
+  :root{
+    --bg:#0c0f17; --panel:#141926; --panel-2:#1b2233; --line:#26304a;
+    --ink:#e8edf7; --muted:#93a0bd; --faint:#64708f;
+    --exact:#34d399; --eccn:#7dd3a0; --group:#fbbf24; --category:#fb923c; --none:#f0556b;
+    --accent:#6aa6ff; --accent-soft:#1d3354;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 24px 80px}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;justify-content:space-between;
+    border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:32px}
+  h1{font-size:30px;margin:0;letter-spacing:-.02em}
+  h1 .dot{color:var(--accent)}
+  .sub{color:var(--muted);font-size:15px;margin-top:6px;max-width:60ch}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:12.5px}
+  .chip{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;
+    padding:4px 11px;color:var(--muted);font-family:var(--mono)}
+  .chip b{color:var(--ink);font-weight:600}
+  .chip.ok{border-color:#1f6f4f;background:#10271f;color:#7ee6b8}
+  .chip.warn{border-color:#7a5b1c;background:#2a210f;color:#f3c969}
+
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--faint);
+    margin:40px 0 14px;font-weight:600}
+
+  /* metric cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px}
+  .card .label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .card .val{font-size:34px;font-weight:680;letter-spacing:-.02em;margin-top:8px;font-family:var(--mono)}
+  .card .val small{font-size:15px;color:var(--faint);font-weight:500}
+  .card.hero{background:linear-gradient(160deg,var(--accent-soft),var(--panel));border-color:#345084}
+  .bar{height:5px;border-radius:3px;background:var(--panel-2);margin-top:12px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+
+  /* grade ladder */
+  .ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .rung{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 14px}
+  .rung .w{font-family:var(--mono);font-size:20px;font-weight:680}
+  .rung .n{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .rung .d{font-size:11.5px;color:var(--faint);margin-top:6px;line-height:1.4}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle;margin-right:6px}
+
+  /* insights */
+  .insights{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.insights{grid-template-columns:1fr}}
+  .insight{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .insight .h{font-weight:650;font-size:15px;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+  .insight .b{color:var(--muted);font-size:13.5px}
+  .insight .big{font-family:var(--mono);font-size:22px;color:var(--ink);font-weight:680}
+  .tag{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:6px;background:var(--panel-2);color:var(--muted)}
+
+  /* table */
+  .tablecard{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);align-items:center}
+  .controls .filt{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
+    border-radius:8px;padding:6px 11px;font-size:12.5px;cursor:pointer;font-family:var(--mono)}
+  .controls .filt.active{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+  .controls .sp{flex:1}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);
+    text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);font-weight:600;
+    cursor:pointer;user-select:none;white-space:nowrap}
+  th .ar{opacity:.5;font-size:9px}
+  td{padding:11px 16px;border-bottom:1px solid #1c2333;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr.row:hover{background:var(--panel-2)}
+  .ecc{font-family:var(--mono);font-size:13px}
+  .gold{color:var(--ink)}
+  .pred{color:var(--muted)}
+  .lvl{font-family:var(--mono);font-size:11px;padding:2px 9px;border-radius:999px;white-space:nowrap;
+    border:1px solid transparent}
+  .lvl.exact{color:var(--exact);background:#0f2a20;border-color:#1f6f4f}
+  .lvl.eccn{color:var(--eccn);background:#13261c;border-color:#2c5f3f}
+  .lvl.group{color:var(--group);background:#2a2310;border-color:#6b521b}
+  .lvl.category{color:var(--category);background:#2a1d10;border-color:#6b451b}
+  .lvl.none{color:var(--none);background:#2a1318;border-color:#6f2230}
+  .gr{font-family:var(--mono);color:var(--faint)}
+  .item{max-width:330px}
+  .item .nm{color:var(--ink)}
+  .item .id{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:2px}
+  .reason{font-size:12px;color:var(--faint);margin-top:7px;display:none;line-height:1.5;
+    border-left:2px solid var(--line);padding-left:10px}
+  tr.row.open .reason{display:block}
+  .expand{font-size:11px;color:var(--accent);cursor:pointer;margin-top:6px;display:inline-block}
+
+  footer{margin-top:40px;color:var(--faint);font-size:12px;line-height:1.7;border-top:1px solid var(--line);padding-top:20px}
+  .modelpick{display:flex;gap:8px;flex-wrap:wrap}
+  .modelpick button{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
+    border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:var(--mono)}
+  .modelpick button.active{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Commodity<span class="dot">Bench</span></h1>
+      <div class="sub">How well can an LLM assign a commodity its correct <b>Export Control
+        Classification Number</b> (ECCN) under the US Commerce Control List — the task BIS performs.</div>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div id="modelpick-wrap" style="display:none">
+    <h2>Model</h2>
+    <div class="modelpick" id="modelpick"></div>
+  </div>
+
+  <h2>Headline — <span id="hl-model" style="text-transform:none;letter-spacing:0;color:var(--muted)"></span></h2>
+  <div class="cards" id="cards"></div>
+
+  <h2>Graded scoring — partial credit by how close the answer lands</h2>
+  <div class="ladder" id="ladder"></div>
+
+  <h2>What the model got wrong</h2>
+  <div class="insights" id="insights"></div>
+
+  <h2>Per-question results</h2>
+  <div class="tablecard">
+    <div class="controls" id="controls">
+      <span style="color:var(--faint);font-size:12px;font-family:var(--mono)">filter:</span>
+      <span class="filt active" data-f="all">all</span>
+      <span class="filt" data-f="exact">exact</span>
+      <span class="filt" data-f="eccn">eccn</span>
+      <span class="filt" data-f="group">group</span>
+      <span class="filt" data-f="category">category</span>
+      <span class="filt" data-f="none">miss</span>
+      <span class="sp"></span>
+      <span style="color:var(--faint);font-size:12px" id="rowcount"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th data-s="item">Item <span class="ar">▼</span></th>
+        <th data-s="gold_eccn">Gold ECCN <span class="ar"></span></th>
+        <th data-s="predicted_eccn">Predicted <span class="ar"></span></th>
+        <th data-s="level">Result <span class="ar"></span></th>
+        <th data-s="grade" style="text-align:right">Grade <span class="ar"></span></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script id="data" type="application/json">/*__DATA__*/</script>
+<script>
+const DATA = JSON.parse(document.getElementById("data").textContent);
+const R = DATA.report;
+const LEVELS = ["exact","eccn","group","category","none"];
+const LVL_NAME = {exact:"Exact ECCN",eccn:"ECCN head",group:"Category + group",category:"Category only",none:"Miss"};
+const pct = x => (x*100).toFixed(1)+"%";
+let current = R.models[0].model;
+
+// ---- meta chips
+const m = R.models.find(x=>x.model===current);
+document.getElementById("meta").innerHTML = [
+  `<span class="chip"><b>${R.n_questions}</b> questions</span>`,
+  `<span class="chip">dataset <b>${R.dataset.split(/[\\/]/).pop()}</b></span>`,
+  R.citable ? `<span class="chip ok">✓ verified-only · citable</span>`
+            : `<span class="chip warn">⚠ includes unverified · not citable</span>`,
+  R.rag ? `<span class="chip">RAG on</span>` : `<span class="chip">no RAG</span>`,
+  `<span class="chip">generated <b>${DATA.generated}</b></span>`,
+].join("");
+
+// ---- model picker (only if >1)
+if (R.models.length > 1){
+  document.getElementById("modelpick-wrap").style.display="block";
+  document.getElementById("modelpick").innerHTML =
+    R.models.map(x=>`<button data-m="${x.model}" class="${x.model===current?'active':''}">${x.model}</button>`).join("");
+  document.querySelectorAll("#modelpick button").forEach(b=>b.onclick=()=>{current=b.dataset.m;render();});
+}
+
+function render(){
+  const m = R.models.find(x=>x.model===current);
+  const rows = DATA.rows[current] || [];
+  document.getElementById("hl-model").textContent = current;
+
+  // ---- cards
+  const cards = [
+    {k:"exact_accuracy", l:"Exact ECCN match", hero:true, sub:"full subparagraph"},
+    {k:"eccn_accuracy",  l:"ECCN head", sub:"ignores subparagraph"},
+    {k:"group_accuracy", l:"Category + group", sub:'e.g. "3A"'},
+    {k:"category_accuracy", l:"Category", sub:'e.g. "3"'},
+    {k:"mean_grade", l:"Mean graded score", sub:"partial credit, 0–1"},
+    {k:"parse_rate", l:"Parse rate", sub:"answered cleanly"},
+  ];
+  document.getElementById("cards").innerHTML = cards.map(c=>{
+    const v = m[c.k];
+    return `<div class="card ${c.hero?'hero':''}">
+      <div class="label">${c.l}</div>
+      <div class="val">${pct(v)}</div>
+      <div class="bar"><i style="width:${(v*100).toFixed(1)}%"></i></div>
+      <div class="label" style="margin-top:9px;color:var(--faint)">${c.sub}</div>
+    </div>`;
+  }).join("") +
+  `<div class="card">
+      <div class="label">Errors</div>
+      <div class="val" style="color:${m.errors?'var(--none)':'var(--exact)'}">${m.errors}<small> / ${m.n}</small></div>
+      <div class="label" style="margin-top:9px;color:var(--faint)">API / parse failures</div>
+   </div>`;
+
+  // ---- grade ladder
+  const counts = {}; LEVELS.forEach(l=>counts[l]=0);
+  rows.forEach(r=>counts[r.score.level]++);
+  const W = DATA.grade_weights;
+  const ladderDef = [
+    ["exact","Exact"],["eccn","ECCN head"],["group","Cat + group"],["category","Category"],["none","Miss"]
+  ];
+  document.getElementById("ladder").innerHTML = ladderDef.map(([lv,nm])=>`
+    <div class="rung">
+      <div class="w" style="color:var(--${lv})">${W[lv].toFixed(1)}</div>
+      <div class="n"><span class="swatch" style="background:var(--${lv})"></span>${nm}</div>
+      <div class="d">${counts[lv]} item${counts[lv]===1?'':'s'} · ${pct(counts[lv]/(rows.length||1))}</div>
+    </div>`).join("");
+
+  // ---- insights (computed)
+  const ear99Gold = rows.filter(r=>r.gold_eccn==="EAR99");
+  const ear99Hit = ear99Gold.filter(r=>r.predicted_eccn==="EAR99").length;
+  const overclass = ear99Gold.filter(r=>r.predicted_eccn!=="EAR99" && r.score.parsed).length;
+  // most-predicted category prefix (first char of ECCN, or EAR99)
+  const predCat = {};
+  rows.forEach(r=>{const p=r.predicted_eccn; const c = p==="EAR99"?"EAR99":(p[0]||"?"); predCat[c]=(predCat[c]||0)+1;});
+  const topCat = Object.entries(predCat).sort((a,b)=>b[1]-a[1])[0]||["?",0];
+  // most-predicted ECCN head
+  const predHead = {};
+  rows.forEach(r=>{const h=(r.predicted_eccn.match(/^[0-9][A-E][0-9]{3}/)||[r.predicted_eccn])[0]; predHead[h]=(predHead[h]||0)+1;});
+  const topHead = Object.entries(predHead).sort((a,b)=>b[1]-a[1])[0]||["?",0];
+
+  document.getElementById("insights").innerHTML = `
+    <div class="insight">
+      <div class="h">🎯 EAR99 recall</div>
+      <div class="b"><span class="big">${ear99Hit}/${ear99Gold.length}</span> of truly-uncontrolled (EAR99) items
+        were correctly called EAR99. The model called <b>${overclass}</b> of them a <i>controlled</i> ECCN —
+        an over-classification bias (flagging benign parts as export-controlled).</div>
+    </div>
+    <div class="insight">
+      <div class="h">🧲 Anchoring</div>
+      <div class="b">Its single most-predicted ECCN head was <span class="tag">${topHead[0]}</span>
+        used <b>${topHead[1]}×</b> across ${rows.length} items, and category
+        <span class="tag">${topCat[0]}</span> dominated predictions (${topCat[1]}×) —
+        a sign of defaulting to a familiar bucket rather than discriminating.</div>
+    </div>
+    <div class="insight">
+      <div class="h">📊 Where partial credit came from</div>
+      <div class="b">Exact matches: <b>${counts.exact}</b>. Got the <i>category</i> right but not the exact code on
+        <b>${counts.group+counts.category}</b> more — close enough to be "in the right neighborhood,"
+        which the graded score rewards (${m.mean_grade.toFixed(3)} mean) even though exact accuracy is ${pct(m.exact_accuracy)}.</div>
+    </div>
+    <div class="insight">
+      <div class="h">🔧 Harness health</div>
+      <div class="b"><span class="big">${pct(m.parse_rate)}</span> parse rate, <b>${m.errors}</b> errors —
+        every answer was recovered cleanly, so these numbers reflect classification ability, not plumbing.</div>
+    </div>`;
+
+  drawTable(rows);
+  document.getElementById("footer").innerHTML = footerHTML(m, rows);
+}
+
+// ---- table with sort + filter + expandable reasoning
+let filt="all", sortKey="grade", sortDir=1;
+function drawTable(rows){
+  let rs = rows.slice();
+  if (filt!=="all") rs = rs.filter(r=>r.score.level===filt);
+  const cmp = {
+    item:(a,b)=>a.item_name.localeCompare(b.item_name),
+    gold_eccn:(a,b)=>a.gold_eccn.localeCompare(b.gold_eccn),
+    predicted_eccn:(a,b)=>a.predicted_eccn.localeCompare(b.predicted_eccn),
+    level:(a,b)=>LEVELS.indexOf(a.score.level)-LEVELS.indexOf(b.score.level),
+    grade:(a,b)=>a.score.grade-b.score.grade,
+  }[sortKey];
+  rs.sort((a,b)=>cmp(a,b)*sortDir);
+  document.getElementById("tbody").innerHTML = rs.map(r=>{
+    const s=r.score, lv=s.level;
+    const reason = (r.reasoning||"").trim();
+    return `<tr class="row" data-id="${r.id}">
+      <td class="item">
+        <div class="nm">${esc(r.item_name)}</div>
+        <div class="id">${r.id}</div>
+        ${reason?`<span class="expand">show reasoning ▾</span><div class="reason">${esc(reason)}</div>`:''}
+      </td>
+      <td><span class="ecc gold">${r.gold_eccn}</span></td>
+      <td><span class="ecc pred">${r.predicted_eccn||'<span style="color:var(--none)">—</span>'}</span></td>
+      <td><span class="lvl ${lv}">${LVL_NAME[lv]}</span></td>
+      <td style="text-align:right"><span class="gr">${s.grade.toFixed(1)}</span></td>
+    </tr>`;
+  }).join("");
+  document.getElementById("rowcount").textContent = `${rs.length} of ${rows.length}`;
+  document.querySelectorAll(".expand").forEach(e=>e.onclick=ev=>{
+    ev.currentTarget.closest("tr").classList.toggle("open");
+  });
+}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+document.getElementById("controls").addEventListener("click",e=>{
+  const f=e.target.closest(".filt"); if(!f) return;
+  filt=f.dataset.f;
+  document.querySelectorAll(".filt").forEach(x=>x.classList.toggle("active",x===f));
+  drawTable(DATA.rows[current]||[]);
+});
+document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{
+  const k=th.dataset.s;
+  if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=(k==="grade")?-1:1;}
+  document.querySelectorAll("th .ar").forEach(a=>a.textContent="");
+  th.querySelector(".ar").textContent = sortDir>0?"▲":"▼";
+  drawTable(DATA.rows[current]||[]);
+});
+
+function footerHTML(m, rows){
+  const tin = rows.reduce((a,r)=>a+(r.usage?.input_tokens||0),0);
+  const tout = rows.reduce((a,r)=>a+(r.usage?.output_tokens||0),0);
+  return `Headline accuracy is computed over <b>all ${m.n} questions</b> (an error or unparseable answer
+    counts as wrong) so models stay comparable. <code>exact_accuracy_attempted</code> (non-errored only)
+    was ${pct(m.exact_accuracy_attempted)}. Token usage this run: ${tin.toLocaleString()} in /
+    ${tout.toLocaleString()} out. Run id <code>${R.run_id}</code>.<br>
+    ⚠ Graded scoring (1.0 / 0.7 / 0.4 / 0.2 / 0) rewards getting the CCL category right even when the exact
+    subparagraph is wrong; it is a research metric, not BIS's pass/fail standard.`;
+}
+
+render();
+</script>
+</body>
+</html>
