@@ -29,7 +29,10 @@ ANSWER_SCHEMA = {
             "technical parameters that drove the decision.",
         },
     },
-    "required": ["eccn", "reasoning"],
+    # All properties are listed in `required`: OpenAI's strict json_schema mode mandates
+    # that every key in `properties` also appear in `required` (with additionalProperties
+    # false), or the request 400s. Anthropic/Gemini accept this too.
+    "required": ["eccn", "category", "reasoning"],
     "additionalProperties": False,
 }
 

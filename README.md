@@ -125,6 +125,27 @@ scripts/build_dataset.py   # validate + template tooling
 tests/               # ECCN scoring tests (pytest)
 ```
 
+## Comparability & limitations
+
+Read before citing any cross-model number:
+
+- **Scoring denominator.** Headline accuracy is computed over **all** questions; an API
+  error or an unparseable answer counts as wrong (0). This keeps models with different
+  failure rates comparable. `exact_accuracy_attempted` (non-errored only) is reported for
+  diagnostics but is never the headline. `parse_rate` and `error_rate` are surfaced so you
+  can see *how* a model failed, not just that it scored low.
+- **Reasoning settings are not yet equalized across providers.** The Anthropic adapter
+  currently runs with adaptive thinking + `effort=high`; the OpenAI and Gemini adapters
+  run at `temperature=0` with no reasoning budget. That is **not** a clean apples-to-apples
+  comparison — it gives Claude a reasoning advantage. Equalize the per-provider config (or
+  sweep reasoning settings) before publishing a head-to-head ranking.
+- **Structured-output enforcement differs.** Anthropic and OpenAI use strict JSON-schema
+  enforcement; the Gemini adapter uses best-effort `response_schema`. The base parser has a
+  prose-ECCN fallback (`extract_eccn`) that takes the *first* ECCN token it finds — robust,
+  but it can misread a model that argues itself out of an answer. Watch `parse_rate`.
+- **Self-classification labels.** Manufacturer ECCNs are not BIS-validated (see
+  [Dataset](#dataset)); `--verified-only` is mandatory for any reported number.
+
 ## Development
 
 ```bash

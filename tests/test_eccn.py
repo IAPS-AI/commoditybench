@@ -28,8 +28,9 @@ def test_parse_head_only():
 
 
 def test_parse_ear99_variants():
-    for text in ["EAR99", "ear99", " EAR 99 ", "EAR-99"]:
-        assert parse(text if "-" not in text else "EAR99").is_ear99
+    # All of these must parse to EAR99 through `parse` itself, incl. the hyphenated form.
+    for text in ["EAR99", "ear99", " EAR 99 ", "EAR-99", "ECCN: EAR99"]:
+        assert parse(text).is_ear99
 
 
 @pytest.mark.parametrize("dirty,clean", [
@@ -113,3 +114,14 @@ def test_unparsable_prediction_scores_zero_and_flags():
 def test_bad_gold_label_raises():
     with pytest.raises(ValueError):
         score_prediction("3A001", "not-an-eccn")
+
+
+def test_empty_prediction_scores_zero():
+    s = score_prediction("", "3A001")
+    assert not s.parsed and s.grade == 0.0 and s.level == "none"
+
+
+def test_ear99_hyphen_prediction_scores_exact():
+    # A model answering "EAR-99" in clean output must match an EAR99 gold.
+    s = score_prediction("EAR-99", "EAR99")
+    assert s.exact_match and s.ear99_correct

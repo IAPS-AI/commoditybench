@@ -78,24 +78,41 @@ def _evaluate_model(
 
 
 def _aggregate(model_name: str, rows: list[dict]) -> dict:
-    n = len(rows)
+    """Aggregate per-question rows into headline metrics for one model.
+
+    Headline rates are computed over **all** ``n`` questions: an API error or an
+    unparseable answer counts as wrong (0). This keeps two models comparable even when
+    they fail on different items — a model that errors out on its hardest questions must
+    not get a denominator made only of the questions it managed to answer. We also report
+    ``exact_accuracy_attempted`` (over non-errored items only) for diagnostics, but it is
+    never the headline.
+    """
+    n = len(rows) or 1  # guarded upstream (non-empty), but keep division safe
     errors = sum(1 for r in rows if r["error"])
     scored = [r["score"] for r in rows if not r["error"]]
-    n_scored = len(scored) or 1  # avoid div-by-zero in an all-error run
+    attempted = len(scored)
 
-    def rate(key: str) -> float:
-        return round(sum(1 for s in scored if s[key]) / n_scored, 4)
+    def count(key: str) -> int:
+        return sum(1 for s in scored if s[key])
+
+    def rate_all(key: str) -> float:
+        return round(count(key) / n, 4)  # errored/unparsed items contribute 0
 
     return {
         "model": model_name,
-        "n": n,
+        "n": len(rows),
+        "attempted": attempted,  # non-errored
         "errors": errors,
-        "exact_accuracy": rate("exact_match"),
-        "eccn_accuracy": rate("eccn_match"),  # ignores subparagraph
-        "group_accuracy": rate("group_match"),  # category + product group
-        "category_accuracy": rate("category_match"),
-        "parse_rate": rate("parsed"),
-        "mean_grade": round(sum(s["grade"] for s in scored) / n_scored, 4),
+        "error_rate": round(errors / n, 4),
+        "exact_accuracy": rate_all("exact_match"),  # over ALL n (headline)
+        "eccn_accuracy": rate_all("eccn_match"),  # ignores subparagraph
+        "group_accuracy": rate_all("group_match"),  # category + product group
+        "category_accuracy": rate_all("category_match"),
+        "parse_rate": rate_all("parsed"),  # fraction of all items that produced an answer
+        "mean_grade": round(sum(s["grade"] for s in scored) / n, 4),
+        "exact_accuracy_attempted": (
+            round(count("exact_match") / attempted, 4) if attempted else 0.0
+        ),
     }
 
 
@@ -174,14 +191,39 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
 
+    # A self-describing run record: pin the inputs so results are reproducible and so a
+    # summary file can never be mistaken for a verified, citable result.
+    citable = args.verified_only
+    report = {
+        "run_id": args.run_id,
+        "dataset": args.dataset,
+        "n_questions": len(questions),
+        "verified_only": args.verified_only,
+        "rag": args.rag,
+        "workers": args.workers,
+        "citable": citable,
+        "note": (
+            "Verified-only run." if citable else
+            "NOT CITABLE: includes verified=false questions. Run with --verified-only "
+            "for headline numbers."
+        ),
+        "models": summaries,
+    }
     summary_path = out_dir / f"{args.run_id}__summary.json"
-    summary_path.write_text(json.dumps(summaries, indent=2), encoding="utf-8")
+    summary_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     _print_table(summaries)
+    if not citable:
+        print(
+            "\n⚠️  Results include unverified questions — NOT citable. "
+            "Use --verified-only for reportable numbers.",
+            file=sys.stderr,
+        )
     print(f"\nWrote per-question results and {summary_path}", file=sys.stderr)
     return 0
 
 
 def _print_table(summaries: list[dict]) -> None:
+    # All accuracy columns are over ALL n questions (errors/unparsed = 0). See _aggregate.
     cols = [
         ("model", "model", 22),
         ("n", "n", 5),
@@ -190,6 +232,7 @@ def _print_table(summaries: list[dict]) -> None:
         ("group_accuracy", "group", 7),
         ("category_accuracy", "cat", 7),
         ("mean_grade", "grade", 7),
+        ("parse_rate", "parse", 7),
         ("errors", "err", 5),
     ]
     header = "".join(f"{label:<{w}}" for _, label, w in cols)

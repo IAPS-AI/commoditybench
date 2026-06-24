@@ -64,9 +64,15 @@ def cmd_validate(path: str) -> int:
             cats[e.category] += 1
         if q.verified:
             verified += 1
-        # Cheap leakage check: the ECCN shouldn't appear verbatim in the prompt text.
-        if q.gold_eccn and not e.is_ear99 and q.gold_eccn.lower() in q.description.lower():
-            problems.append(f"{q.id}: gold_eccn leaks into the description text")
+        # Leakage check: neither the full ECCN nor its CGNNN head should appear in the
+        # description (which is all the model sees). Normalize the description first so
+        # "3 A 001" / "3a001" variants are caught, not just the exact string.
+        if not e.is_ear99 and e.head:
+            from commoditybench.eccn import normalize_eccn_text
+
+            norm_desc = normalize_eccn_text(q.description)
+            if e.head in norm_desc or normalize_eccn_text(q.gold_eccn) in norm_desc:
+                problems.append(f"{q.id}: gold_eccn (or its head {e.head}) leaks into the description")
 
     print(f"Loaded {len(questions)} questions from {path}")
     print(f"  verified:   {verified}  unverified: {len(questions) - verified}")

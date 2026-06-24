@@ -88,6 +88,7 @@ def normalize_eccn_text(text: str) -> str:
     t = text.strip().upper()
     t = re.sub(r"^ECCN[:\s]*", "", t)  # drop a leading "ECCN" label
     t = t.replace(" ", "")
+    t = t.replace("-", "")  # ECCNs use no hyphens; lets "EAR-99" normalize to EAR99
     t = re.sub(r"\.+", ".", t)  # collapse repeated dots
     t = t.strip(".")
     return t
