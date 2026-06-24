@@ -1,0 +1,42 @@
+[project]
+name = "commoditybench"
+version = "0.1.0"
+description = "A benchmark measuring how well LLMs assign Export Control Classification Numbers (ECCNs) to commodities under the US Commerce Control List."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Institute for AI Policy and Strategy (IAPS)" }]
+dependencies = [
+    "anthropic>=0.40",
+    "pydantic>=2.6",
+    "python-dotenv>=1.0",
+    "tenacity>=8.2",
+]
+
+[project.optional-dependencies]
+openai = ["openai>=1.40"]
+gemini = ["google-genai>=0.3"]
+rag = ["chromadb>=0.5", "lxml>=5.0"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+all = [
+    "openai>=1.40",
+    "google-genai>=0.3",
+    "chromadb>=0.5",
+    "lxml>=5.0",
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[project.scripts]
+commoditybench = "commoditybench.run_eval:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

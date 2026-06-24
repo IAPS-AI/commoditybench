@@ -1,0 +1,128 @@
+# CommodityBench
+
+**A benchmark measuring how well LLMs perform commodity classification** — assigning a
+commodity its correct **Export Control Classification Number (ECCN)** under the US
+**Commerce Control List (CCL)**, the task performed by the Bureau of Industry and
+Security (BIS).
+
+Built by the [Institute for AI Policy and Strategy (IAPS)](https://www.iaps.ai/) to
+quantify how capable current closed- and open-source models are at this task, as input
+to the question of whether BIS should adopt LLM assistance for classification.
+
+> **Status: early scaffold.** The evaluation harness, ECCN scoring, and model adapters
+> are implemented and tested. The labeled question set is **not yet built** — the
+> bundled example data is intentionally unverified (see [Dataset](#dataset)). Do not
+> cite any accuracy numbers until a human-verified set exists.
+
+---
+
+## What it measures
+
+Given a commodity description, a model must return one ECCN (e.g. `3A001.a.1.a`) or
+`EAR99`. Because partial correctness is genuinely useful in a classification workflow,
+scoring is **graded**, not all-or-nothing:
+
+| Level | Meaning | Default weight |
+|---|---|---|
+| `exact` | Exact ECCN incl. subparagraph | 1.0 |
+| `eccn` | Correct `CGNNN` head, wrong/over-precise subparagraph | 0.7 |
+| `group` | Correct category + product group (e.g. `3A`) | 0.4 |
+| `category` | Correct category only (e.g. `3`) | 0.2 |
+| `none` | No shared structure | 0.0 |
+
+`EAR99` is its own equivalence class: confusing "not on the CCL" with a real control
+number (in either direction) scores 0. The summary reports exact / eccn / group /
+category accuracy and a mean graded score per model. See
+[`src/commoditybench/eccn.py`](src/commoditybench/eccn.py).
+
+## Install
+
+```bash
+python -m pip install -e .            # core (Anthropic adapter included)
+python -m pip install -e ".[openai]"  # add GPT
+python -m pip install -e ".[gemini]"  # add Gemini
+python -m pip install -e ".[all]"     # everything incl. RAG + dev tools
+```
+
+Copy `.env.example` to `.env` and add the API keys for the providers you want to run.
+
+## Run
+
+```bash
+# List enrolled models
+commoditybench --list-models
+
+# Smoke-test the harness end-to-end on the (unverified) example data
+commoditybench --dataset data/questions.example.jsonl --models claude-opus-4-8
+
+# Real run: verified data only, multiple models, 8 concurrent calls each
+commoditybench --dataset data/questions.jsonl \
+  --models claude-opus-4-8 gpt-4o gemini-2.0-flash \
+  --verified-only --workers 8
+```
+
+Results land in `results/`: per-question predictions + scores
+(`<run_id>__<model>.jsonl`) and an aggregate table (`<run_id>__summary.json`).
+
+Enroll a new model by adding one line to
+[`src/commoditybench/models/registry.py`](src/commoditybench/models/registry.py).
+Default Anthropic model is `claude-opus-4-8` with adaptive thinking and native
+structured outputs.
+
+## Dataset
+
+The credibility of the benchmark rests entirely on its labels, so this is the careful
+part. Primary source: **manufacturer self-classifications** — real products that vendors
+publish with an official ECCN — starting from
+[BIS's own index of participating companies](https://www.bis.gov/licensing/classify-your-item/publicly-available-classification-information).
+
+⚠️ **BIS does not validate those classifications** ("BIS will not validate or be
+responsible for the accuracy of the classification information"). So self-classified
+ECCNs are strong candidate labels that a human must confirm before they count. The
+`verified` flag enforces this: `--verified-only` drops everything unconfirmed, and
+**every reported number must use it**.
+
+The bundled [`data/questions.example.jsonl`](data/questions.example.jsonl) is entirely
+unverified, illustrative fixtures for exercising the harness — never a result. Full
+schema and sourcing methodology: [`data/schema.md`](data/schema.md).
+
+```bash
+# Validate a dataset file and see category coverage
+python scripts/build_dataset.py validate data/questions.example.jsonl
+# Print a blank question record to fill in
+python scripts/build_dataset.py template
+```
+
+## RAG (stretch goal)
+
+`run_eval --rag` injects retrieved CCL excerpts into the prompt so we can A/B model
+accuracy with vs. without retrieval over the Commerce Control List. The retriever and
+index scaffolding live in [`src/commoditybench/rag/`](src/commoditybench/rag/); building
+the index from the eCFR (15 CFR 774, Supplement No. 1) is the next concrete task.
+
+## Layout
+
+```
+src/commoditybench/
+  eccn.py            # ECCN parsing, normalization, graded scoring  (core)
+  dataset.py         # Question schema + JSONL loader
+  prompts.py         # provider-agnostic prompt + answer JSON schema
+  run_eval.py        # CLI: run models, score, write results
+  models/            # provider adapters behind one interface + registry
+  rag/               # stretch: CCL retrieval (retriever + index builder)
+data/                # schema.md + example/verified question sets
+scripts/build_dataset.py   # validate + template tooling
+tests/               # ECCN scoring tests (pytest)
+```
+
+## Development
+
+```bash
+python -m pip install -e ".[dev]"
+pytest          # ECCN scoring tests
+ruff check .
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).

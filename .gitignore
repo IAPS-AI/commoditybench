@@ -1,0 +1,29 @@
+# Secrets
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Benchmark outputs
+results/
+*.local.jsonl
+
+# RAG index
+.rag_index/
+data/ccl/raw/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
