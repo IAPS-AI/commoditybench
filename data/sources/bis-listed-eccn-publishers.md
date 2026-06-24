@@ -77,7 +77,7 @@ Marked ✅ = already used in `data/questions.jsonl`. Bold = has a public ECCN ma
 
 | Source used | On BIS list? | Provenance | Verdict |
 |---|---|---|---|
-| Analog Devices (`analog.com/exportclassification`) | **Yes** | Public export tool | **Tier A — keep**; confirm each shows on the ADI tool |
+| Analog Devices + Maxim | **Yes** | **Human-visible** in the ADI export tool | **Tier A — confirmed.** All 9 items render in the US ECCN column of `analog.com/en/support/view-export-classification.html` (Product Model Search); values match. Awaiting maintainer sign-off to set verified=true. |
 | Maxim / MAXQ1061 (via ADI) | **Yes** | Public tool | Tier A |
 | Microchip (`microchipdirect` export data) | No | Public-ish tool | Tier B — usable fallback |
 | Digi-Key (distributor) | No | ECCN visible on product page | Tier B — visible but distributor self-class |
