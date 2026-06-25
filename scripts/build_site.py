@@ -45,6 +45,17 @@ CATEGORY_NAMES = {
     "9": "Aerospace & Propulsion", "EAR99": "EAR99 (not listed)",
 }
 
+# The Opus generation ladder for the across-generations (METR-style) trendline. Dates are
+# the Anthropic Models API ``created_at`` (the trendline x-axis). Keep in sync with the
+# ladder in models/registry.py and scripts/build_generation_trendline.py.
+GEN_LADDER = {
+    "claude-opus-4-1": ("Opus 4.1", "2025-08-05", "Aug 2025"),
+    "claude-opus-4-5": ("Opus 4.5", "2025-11-24", "Nov 2025"),
+    "claude-opus-4-6": ("Opus 4.6", "2026-02-04", "Feb 2026"),
+    "claude-opus-4-7": ("Opus 4.7", "2026-04-14", "Apr 2026"),
+    "claude-opus-4-8": ("Opus 4.8", "2026-05-28", "May 2026"),
+}
+
 
 def _rows(results_dir: Path, run_id: str, model: str) -> list[dict]:
     p = results_dir / f"{run_id}__{model}.jsonl"
@@ -95,7 +106,33 @@ def _per_category(base: list[dict], ag: list[dict]) -> list[dict]:
     return sorted(out, key=lambda x: (x["cat"] == "EAR99", x["cat"]))
 
 
-def build(crossmodel_summary: Path, agentic_summary: Path, out_path: Path) -> None:
+def _generations(results_dir: Path, gen_summary: Path | None) -> list[dict]:
+    """Per-generation metrics for the across-generations trendline (verified set).
+
+    Returns [] when the run isn't present so the section degrades out cleanly. The tools
+    (agentic) half is intentionally absent — it's run separately once credits allow.
+    """
+    if not gen_summary or not gen_summary.exists():
+        return []
+    report = json.loads(gen_summary.read_text(encoding="utf-8"))
+    run_id = report["run_id"]
+    out = []
+    for m in report["models"]:
+        model = m["model"]
+        if model not in GEN_LADDER:
+            continue
+        label, released, released_label = GEN_LADDER[model]
+        out.append({
+            "model": model, "label": label,
+            "released": released, "released_label": released_label,
+            "metrics": _metrics(_rows(results_dir, run_id, model)),
+        })
+    out.sort(key=lambda g: g["released"])
+    return out
+
+
+def build(crossmodel_summary: Path, agentic_summary: Path, out_path: Path,
+          generations_summary: Path | None = None) -> None:
     results_dir = crossmodel_summary.parent
     cm = json.loads(crossmodel_summary.read_text(encoding="utf-8"))
     ag_report = json.loads(agentic_summary.read_text(encoding="utf-8"))
@@ -164,6 +201,8 @@ def build(crossmodel_summary: Path, agentic_summary: Path, out_path: Path) -> No
         "model_keys": list(cm_rows.keys()),
         "model_meta": MODEL_META,
         "toollift": toollift,
+        "generations": _generations(results_dir, generations_summary),
+        "generations_pending_tools": True,
         "questions": questions,
         "grade_weights": GRADE_WEIGHTS,
         "equalized": False,
@@ -180,9 +219,12 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--crossmodel", default=str(ROOT / "results" / "expanded__summary.json"))
     ap.add_argument("--agentic", default=str(ROOT / "results" / "expanded_agentic__summary.json"))
+    ap.add_argument("--generations", default=str(ROOT / "results" / "gen__summary.json"),
+                    help="No-tools cross-generation run (run-id 'gen'); section hides if absent.")
     ap.add_argument("--out", default=str(ROOT / "dashboard" / "index.html"))
     args = ap.parse_args(argv)
-    build(Path(args.crossmodel), Path(args.agentic), Path(args.out))
+    build(Path(args.crossmodel), Path(args.agentic), Path(args.out),
+          generations_summary=Path(args.generations))
     return 0
 
 

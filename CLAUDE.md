@@ -60,6 +60,12 @@ RAG over the CCL, evaluated with vs. without retrieval.
   NOT done — API credits ran out mid-run** (billing 400s; failed outputs deleted). Trendline
   page: `dashboard/generation_trendline.html` (shows a "tools pending" banner); builder
   `scripts/build_generation_trendline.py`; writeup `results/generation_trendline_findings.md`.
+  **Now also folded into the main results website** (`scripts/build_site.py --generations`):
+  a new "02 · Across generations" section with a METR-style timeline (signature element — the
+  teal grade line vs. a dotted "if scale transferred" reference it conspicuously fails to
+  follow, plus a per-generation grade-ladder strip), and the hero reframed around the unified
+  thesis *the lever is grounding, not scale*. `dashboard/generation_trendline.html` is kept as
+  the standalone lightweight artifact.
 - **Not done:** sign-off on the 11 new candidates; Cat **0/4/6/8 still empty**; equalized
   comparison; RAG index. Cross-model headline accuracy should still cite the 23-verified set;
   keep the not-equalized / tool-lift framing. The expanded runs include unverified items (for
@@ -116,9 +122,10 @@ PYTHONPATH=src py -3.12 scripts/build_dashboard.py --summary results/comparison_
 # AGENTIC condition (Claude only): model navigates the CCL via tools before answering.
 PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
   --models claude-opus-4-8 --agentic --workers 4 --run-id expanded_agentic
-# Build the results WEBSITE from the two canonical runs (cross-model + tool-lift):
+# Build the results WEBSITE (cross-model + tool-lift + across-generations timeline):
 PYTHONPATH=src py -3.12 scripts/build_site.py \
-  --crossmodel results/expanded__summary.json --agentic results/expanded_agentic__summary.json
+  --crossmodel results/expanded__summary.json --agentic results/expanded_agentic__summary.json \
+  --generations results/gen__summary.json   # --generations optional; section hides if absent
 # Rebuild the CCL index from the eCFR (already committed; only if it needs refreshing):
 PYTHONPATH=src py -3.12 -m commoditybench.ccl.parse_ecfr --fetch
 ```
