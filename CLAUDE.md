@@ -48,6 +48,37 @@ RAG over the CCL, evaluated with vs. without retrieval.
   *recall* gaps (catch-alls, thresholds) but not *judgment* calls; reading the 5A991 telecom
   catch-all even induces over-control of EAR99 Ethernet PHYs (double-edged). Full write-up:
   `results/agentic_ab_findings.md`. Runs: `expanded` (cross-model) + `expanded_agentic`.
+- **Cross-generation trendline (NEW, branch `cross-generation-trendline`).** A METR-style
+  plot of capability vs. **model release date** across the **Opus generation ladder**
+  (4.1→4.5→4.6→4.7→4.8; older gens are retired/404 as of 2026-06-25). The Anthropic adapter
+  now drives older generations via per-model `thinking_mode` (`extended` for 4.1/4.5 which
+  predate adaptive thinking) + optional `effort` (4.1 has none); configs verified by a 400
+  probe. **No-tools run done** (run-id `gen`, 23 verified, 0 errors): the trendline is
+  **flat then dips** — exact 0.35→0.39 across 4.1–4.7, then **4.8 lowest at 0.22** (grade
+  0.40); `group`/`category` steady ~0.57–0.61. Newer Opus isn't better at unaided ECCN
+  classification here; over-classification plausibly worsens it. **Tools (agentic) half
+  NOT done — API credits ran out mid-run** (billing 400s; failed outputs deleted). Trendline
+  page: `dashboard/generation_trendline.html` (shows a "tools pending" banner); builder
+  `scripts/build_generation_trendline.py`; writeup `results/generation_trendline_findings.md`.
+  **Now also folded into the main results website** (`scripts/build_site.py --generations`):
+  a new "02 · Across generations" section with a METR-style timeline (signature element — the
+  teal grade line vs. a dotted "if scale transferred" reference it conspicuously fails to
+  follow, plus a per-generation grade-ladder strip), and the hero reframed around the unified
+  thesis *the lever is grounding, not scale*. `dashboard/generation_trendline.html` is kept as
+  the standalone lightweight artifact.
+- **Subscription harness for the tools condition (NEW): `cc_harness/`.** Runs the agentic
+  (read-the-CCL) condition through a **Claude Code session on a Max subscription** instead of
+  burning API credits (the API agentic cross-gen run died on a credit wall). The folder is
+  self-contained: `CLAUDE.md` (the agentic system prompt + tool guide, auto-loaded so the
+  session *is* the model under test), `ccl.py` (the 4 CCL tools as a CLI — `categories/outline/
+  read/search`, vendored verbatim from `ccl/index.py`), vendored `ccl_index.json`, `questions.jsonl`
+  (the 23 verified items **sanitized** to id+name+description — no gold, no category), `record.py`
+  (writes answers to `../../cc_results/<label>__answers.jsonl`, **outside the repo** so runs can't
+  peek and no gold sits beside the questions), and `PROMPT.txt`. Grade with
+  `scripts/grade_cc_runs.py` (same graded scorer + run_eval-shaped output; prints the tool lift
+  vs. the no-tools `gen` baseline by label). **Caveat:** Claude Code's `/model` only exposes
+  current-gen (Opus 4.8 / Sonnet 4.6 / Haiku 4.5), so this yields the tools condition for those
+  (completing the 4.8 tool-lift point + a cross-tier tools comparison), not the full 4.1→4.8 ladder.
 - **Not done:** sign-off on the 11 new candidates; Cat **0/4/6/8 still empty**; equalized
   comparison; RAG index. Cross-model headline accuracy should still cite the 23-verified set;
   keep the not-equalized / tool-lift framing. The expanded runs include unverified items (for
@@ -104,9 +135,10 @@ PYTHONPATH=src py -3.12 scripts/build_dashboard.py --summary results/comparison_
 # AGENTIC condition (Claude only): model navigates the CCL via tools before answering.
 PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
   --models claude-opus-4-8 --agentic --workers 4 --run-id expanded_agentic
-# Build the results WEBSITE from the two canonical runs (cross-model + tool-lift):
+# Build the results WEBSITE (cross-model + tool-lift + across-generations timeline):
 PYTHONPATH=src py -3.12 scripts/build_site.py \
-  --crossmodel results/expanded__summary.json --agentic results/expanded_agentic__summary.json
+  --crossmodel results/expanded__summary.json --agentic results/expanded_agentic__summary.json \
+  --generations results/gen__summary.json   # --generations optional; section hides if absent
 # Rebuild the CCL index from the eCFR (already committed; only if it needs refreshing):
 PYTHONPATH=src py -3.12 -m commoditybench.ccl.parse_ecfr --fetch
 ```
