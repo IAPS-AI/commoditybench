@@ -60,16 +60,50 @@ class AnthropicModel(ClassifierModel):
         name: str = "claude-opus-4-8",
         model_id: str = DEFAULT_MODEL,
         *,
-        effort: str = "high",
+        effort: Optional[str] = "high",
         max_tokens: int = 4096,
-        thinking: bool = True,
+        thinking_mode: str = "adaptive",
+        thinking_budget: int = 4096,
+        thinking: Optional[bool] = None,
         **kwargs,
     ):
+        """Adapter for one Claude generation.
+
+        ``thinking_mode`` selects the reasoning surface so a single adapter can drive
+        models from different generations (their reasoning APIs diverge):
+          * ``"adaptive"`` — ``thinking={"type": "adaptive"}`` (Opus 4.6+, Sonnet 4.6).
+          * ``"extended"`` — ``thinking={"type": "enabled", "budget_tokens": N}`` for
+            Claude-4-era models (Opus 4.1, 4.5) that predate adaptive thinking and 400
+            on it. ``thinking_budget`` must be < ``max_tokens``.
+          * ``"off"``      — no thinking block.
+        ``effort`` is passed in ``output_config`` only when not ``None`` — Opus 4.1 has
+        no effort parameter and 400s if it's sent. ``thinking=False`` is accepted as a
+        back-compat alias for ``thinking_mode="off"``.
+        """
         super().__init__(name, model_id, **kwargs)
+        if thinking is False:
+            thinking_mode = "off"
         self.effort = effort
         self.max_tokens = max_tokens
-        self.thinking = thinking
+        self.thinking_mode = thinking_mode
+        self.thinking_budget = thinking_budget
         self._client = None
+
+    def _thinking_param(self) -> Optional[dict]:
+        if self.thinking_mode == "adaptive":
+            return {"type": "adaptive"}
+        if self.thinking_mode == "extended":
+            return {"type": "enabled", "budget_tokens": self.thinking_budget}
+        return None  # "off"
+
+    def _output_config(self, *, include_format: bool) -> Optional[dict]:
+        """Assemble ``output_config``, omitting ``effort`` when the model lacks it."""
+        oc: dict = {}
+        if self.effort is not None:
+            oc["effort"] = self.effort
+        if include_format:
+            oc["format"] = {"type": "json_schema", "schema": ANSWER_SCHEMA}
+        return oc or None
 
     @property
     def client(self):
@@ -89,13 +123,11 @@ class AnthropicModel(ClassifierModel):
             max_tokens=self.max_tokens,
             system=system,
             messages=[{"role": "user", "content": user}],
-            output_config={
-                "effort": self.effort,
-                "format": {"type": "json_schema", "schema": ANSWER_SCHEMA},
-            },
+            output_config=self._output_config(include_format=True),
         )
-        if self.thinking:
-            kwargs["thinking"] = {"type": "adaptive"}
+        thinking = self._thinking_param()
+        if thinking is not None:
+            kwargs["thinking"] = thinking
 
         resp = self.client.messages.create(**kwargs)
         # With output_config.format, the first text block is schema-valid JSON.
@@ -181,10 +213,13 @@ class AnthropicModel(ClassifierModel):
             system=AGENTIC_SYSTEM_PROMPT,
             messages=messages,
             tools=tools,
-            output_config={"effort": self.effort},
         )
-        if self.thinking:
-            kwargs["thinking"] = {"type": "adaptive"}
+        oc = self._output_config(include_format=False)
+        if oc is not None:
+            kwargs["output_config"] = oc
+        thinking = self._thinking_param()
+        if thinking is not None:
+            kwargs["thinking"] = thinking
         return self.client.messages.create(**kwargs)
 
     def _force_submit(
@@ -201,16 +236,21 @@ class AnthropicModel(ClassifierModel):
             history.append(
                 {"role": "user", "content": "Provide your final classification now."}
             )
+        # Forced tool_choice is incompatible with thinking, so thinking is already off
+        # here; only effort (when the model supports it) rides in output_config.
+        fkwargs = dict(
+            model=self.model_id,
+            max_tokens=2048,
+            system=AGENTIC_SYSTEM_PROMPT,
+            messages=history,
+            tools=tools,
+            tool_choice={"type": "tool", "name": SUBMIT_TOOL_NAME},
+        )
+        oc = self._output_config(include_format=False)
+        if oc is not None:
+            fkwargs["output_config"] = oc
         try:
-            resp = self.client.messages.create(
-                model=self.model_id,
-                max_tokens=2048,
-                system=AGENTIC_SYSTEM_PROMPT,
-                messages=history,
-                tools=tools,
-                output_config={"effort": self.effort},
-                tool_choice={"type": "tool", "name": SUBMIT_TOOL_NAME},
-            )
+            resp = self.client.messages.create(**fkwargs)
             usage["input_tokens"] += resp.usage.input_tokens
             usage["output_tokens"] += resp.usage.output_tokens
             usage["steps"] += 1

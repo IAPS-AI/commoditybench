@@ -48,6 +48,18 @@ RAG over the CCL, evaluated with vs. without retrieval.
   *recall* gaps (catch-alls, thresholds) but not *judgment* calls; reading the 5A991 telecom
   catch-all even induces over-control of EAR99 Ethernet PHYs (double-edged). Full write-up:
   `results/agentic_ab_findings.md`. Runs: `expanded` (cross-model) + `expanded_agentic`.
+- **Cross-generation trendline (NEW, branch `cross-generation-trendline`).** A METR-style
+  plot of capability vs. **model release date** across the **Opus generation ladder**
+  (4.1→4.5→4.6→4.7→4.8; older gens are retired/404 as of 2026-06-25). The Anthropic adapter
+  now drives older generations via per-model `thinking_mode` (`extended` for 4.1/4.5 which
+  predate adaptive thinking) + optional `effort` (4.1 has none); configs verified by a 400
+  probe. **No-tools run done** (run-id `gen`, 23 verified, 0 errors): the trendline is
+  **flat then dips** — exact 0.35→0.39 across 4.1–4.7, then **4.8 lowest at 0.22** (grade
+  0.40); `group`/`category` steady ~0.57–0.61. Newer Opus isn't better at unaided ECCN
+  classification here; over-classification plausibly worsens it. **Tools (agentic) half
+  NOT done — API credits ran out mid-run** (billing 400s; failed outputs deleted). Trendline
+  page: `dashboard/generation_trendline.html` (shows a "tools pending" banner); builder
+  `scripts/build_generation_trendline.py`; writeup `results/generation_trendline_findings.md`.
 - **Not done:** sign-off on the 11 new candidates; Cat **0/4/6/8 still empty**; equalized
   comparison; RAG index. Cross-model headline accuracy should still cite the 23-verified set;
   keep the not-equalized / tool-lift framing. The expanded runs include unverified items (for

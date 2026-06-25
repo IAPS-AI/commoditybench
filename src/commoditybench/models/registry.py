@@ -33,7 +33,34 @@ def _gemini(model_id: str, **kw) -> Callable[[], ClassifierModel]:
 # name -> factory(name) -> ClassifierModel. Edit ids here as providers update models.
 _REGISTRY: dict[str, Callable[[str], ClassifierModel]] = {
     # --- Anthropic (Claude) ---
-    "claude-opus-4-8": _anthropic("claude-opus-4-8"),
+    # Opus generation ladder for the cross-generation (METR-style) trendline. Each
+    # generation is run in its STRONGEST NATIVE reasoning config — the reasoning API
+    # surface diverges across generations, so a single config can't drive all five:
+    #   * 4.1 (2025-08): extended thinking only; no `effort` parameter (sending it 400s).
+    #   * 4.5 (2025-11): extended thinking; `effort` supported (adaptive thinking 400s).
+    #   * 4.6 (2026-02), 4.7 (2026-04), 4.8 (2026-05): adaptive thinking + `effort`.
+    # Verified empirically (see results/generation_ab_findings.md). `max_tokens=8192` on
+    # all five gives reasoning headroom so no generation is truncated (a confound that
+    # would otherwise penalise the newer adaptive models). This is a capability snapshot
+    # in each model's native config — NOT an equalized comparison.
+    # See results/generation_trendline_findings.md for the writeup + trendline.
+    "claude-opus-4-1": _anthropic(
+        "claude-opus-4-1", thinking_mode="extended", effort=None,
+        max_tokens=8192, thinking_budget=6000,
+    ),
+    "claude-opus-4-5": _anthropic(
+        "claude-opus-4-5", thinking_mode="extended", effort="high",
+        max_tokens=8192, thinking_budget=6000,
+    ),
+    "claude-opus-4-6": _anthropic(
+        "claude-opus-4-6", thinking_mode="adaptive", effort="high", max_tokens=8192,
+    ),
+    "claude-opus-4-7": _anthropic(
+        "claude-opus-4-7", thinking_mode="adaptive", effort="high", max_tokens=8192,
+    ),
+    "claude-opus-4-8": _anthropic(
+        "claude-opus-4-8", thinking_mode="adaptive", effort="high", max_tokens=8192,
+    ),
     "claude-sonnet-4-6": _anthropic("claude-sonnet-4-6"),
     # --- OpenAI (GPT) ---
     "gpt-4o": _openai("gpt-4o"),

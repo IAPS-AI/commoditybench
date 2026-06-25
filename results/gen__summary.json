@@ -1,0 +1,83 @@
+{
+  "run_id": "gen",
+  "dataset": "data/questions.jsonl",
+  "n_questions": 23,
+  "verified_only": true,
+  "rag": false,
+  "agentic": false,
+  "workers": 6,
+  "citable": true,
+  "note": "Verified-only run.",
+  "models": [
+    {
+      "model": "claude-opus-4-1",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.3478,
+      "eccn_accuracy": 0.4348,
+      "group_accuracy": 0.5652,
+      "category_accuracy": 0.5652,
+      "parse_rate": 1.0,
+      "mean_grade": 0.4609,
+      "exact_accuracy_attempted": 0.3478
+    },
+    {
+      "model": "claude-opus-4-5",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.3913,
+      "eccn_accuracy": 0.5217,
+      "group_accuracy": 0.6087,
+      "category_accuracy": 0.6087,
+      "parse_rate": 1.0,
+      "mean_grade": 0.5174,
+      "exact_accuracy_attempted": 0.3913
+    },
+    {
+      "model": "claude-opus-4-6",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.3913,
+      "eccn_accuracy": 0.4783,
+      "group_accuracy": 0.6087,
+      "category_accuracy": 0.6087,
+      "parse_rate": 1.0,
+      "mean_grade": 0.5043,
+      "exact_accuracy_attempted": 0.3913
+    },
+    {
+      "model": "claude-opus-4-7",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.3913,
+      "eccn_accuracy": 0.4783,
+      "group_accuracy": 0.5652,
+      "category_accuracy": 0.5652,
+      "parse_rate": 1.0,
+      "mean_grade": 0.487,
+      "exact_accuracy_attempted": 0.3913
+    },
+    {
+      "model": "claude-opus-4-8",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.2174,
+      "eccn_accuracy": 0.3478,
+      "group_accuracy": 0.5652,
+      "category_accuracy": 0.5652,
+      "parse_rate": 1.0,
+      "mean_grade": 0.3957,
+      "exact_accuracy_attempted": 0.2174
+    }
+  ]
+}
