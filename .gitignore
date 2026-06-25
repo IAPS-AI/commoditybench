@@ -15,7 +15,8 @@ venv/
 .ruff_cache/
 
 # Benchmark outputs
-results/
+# NOTE: results/ is intentionally tracked — the canonical run summaries/JSONL and the
+# hand-written agentic_ab_findings.md are the evidence base for the dashboard and paper.
 *.local.jsonl
 
 # RAG index

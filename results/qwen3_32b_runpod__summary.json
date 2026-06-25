@@ -1,0 +1,26 @@
+{
+  "run_id": "qwen3_32b_runpod",
+  "dataset": "data/questions.jsonl",
+  "n_questions": 23,
+  "verified_only": true,
+  "rag": false,
+  "workers": 8,
+  "citable": true,
+  "note": "Verified-only run.",
+  "models": [
+    {
+      "model": "qwen3-32b",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.087,
+      "eccn_accuracy": 0.1739,
+      "group_accuracy": 0.3478,
+      "category_accuracy": 0.3478,
+      "parse_rate": 1.0,
+      "mean_grade": 0.2174,
+      "exact_accuracy_attempted": 0.087
+    }
+  ]
+}

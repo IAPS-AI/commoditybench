@@ -191,8 +191,10 @@ table links each item to its source (with the part to search for tool-based sour
 - `gh` authed as `maxwell-k-roberts` with access to `IAPS-AI`. Commit on a branch or main;
   end commit messages with `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
 - Python: `py -3.12`. For PDFs use the Read tool; for blocked/JS pages use
-  `node C:/Users/maxwe/tools/fetch.mjs "<url>" --wait 6000`.
-- Helper from a prior session: `C:/Users/maxwe/tools/mchpeccn.mjs <part>` hits Microchip's
+  `node tools/fetch.mjs "<url>" --wait 6000`. The ECCN-verification helpers are now
+  **vendored in `tools/`** (was `C:/Users/maxwe/tools/`); see `tools/README.md` for the
+  per-machine setup (`npm install playwright`; `adichrome.mjs` needs a real Chrome).
+- Helper from a prior session: `node tools/mchpeccn.mjs <part>` hits Microchip's
   export-control API (returns ECCN JSON) — useful for cross-checking Microchip parts.
 - Manufacturer export endpoints (ADI, Microchip, Thorlabs) are session/XHR-gated; plain
   curl returns empty. Use a headless browser (the fetch.mjs tool) or a research agent.
@@ -200,7 +202,7 @@ table links each item to its source (with the part to search for tool-based sour
   under the REAL Chrome engine — headless Chromium fails its JS via `ERR_HTTP2_PROTOCOL_ERROR`
   and returns an empty form / placeholder row. A reusable Playwright driver (launches
   `channel:"chrome"`, types the part into the search box, reads the US ECCN cell + cross-checks
-  the `FetchExportClassificationData` JSON) is at `C:/Users/maxwe/tools/adichrome.mjs`.
+  the `FetchExportClassificationData` JSON) is at `tools/adichrome.mjs`.
 - For open-weight evals, `RUNPOD_API_KEY` (RunPod public endpoints, ~$10/1M tokens) joins the
   three provider keys in `.env`; `.env.example` lists all four.
 

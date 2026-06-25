@@ -1,0 +1,54 @@
+{
+  "run_id": "comparison",
+  "dataset": "data/questions.jsonl",
+  "n_questions": 23,
+  "verified_only": true,
+  "rag": false,
+  "workers": 8,
+  "citable": true,
+  "note": "Verified-only run.",
+  "models": [
+    {
+      "model": "claude-opus-4-8",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.2609,
+      "eccn_accuracy": 0.3913,
+      "group_accuracy": 0.6087,
+      "category_accuracy": 0.6087,
+      "parse_rate": 1.0,
+      "mean_grade": 0.4391,
+      "exact_accuracy_attempted": 0.2609
+    },
+    {
+      "model": "gpt-4o",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.1739,
+      "eccn_accuracy": 0.3043,
+      "group_accuracy": 0.5652,
+      "category_accuracy": 0.5652,
+      "parse_rate": 1.0,
+      "mean_grade": 0.3696,
+      "exact_accuracy_attempted": 0.1739
+    },
+    {
+      "model": "qwen3-32b",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.0435,
+      "eccn_accuracy": 0.087,
+      "group_accuracy": 0.3043,
+      "category_accuracy": 0.3043,
+      "parse_rate": 1.0,
+      "mean_grade": 0.1609,
+      "exact_accuracy_attempted": 0.0435
+    }
+  ]
+}

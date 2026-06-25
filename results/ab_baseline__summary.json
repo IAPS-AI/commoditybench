@@ -1,0 +1,27 @@
+{
+  "run_id": "ab_baseline",
+  "dataset": "data/questions.jsonl",
+  "n_questions": 23,
+  "verified_only": true,
+  "rag": false,
+  "agentic": false,
+  "workers": 6,
+  "citable": true,
+  "note": "Verified-only run.",
+  "models": [
+    {
+      "model": "claude-opus-4-8",
+      "n": 23,
+      "attempted": 23,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.3043,
+      "eccn_accuracy": 0.4348,
+      "group_accuracy": 0.5652,
+      "category_accuracy": 0.5652,
+      "parse_rate": 1.0,
+      "mean_grade": 0.4478,
+      "exact_accuracy_attempted": 0.3043
+    }
+  ]
+}
