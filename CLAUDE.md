@@ -81,8 +81,10 @@ human-review-sources/    # purchase invoices used as provenance (committed)
 scripts/
   build_dataset.py # validate <file> | template
   make_worksheet.py# regenerate data/verification_worksheet.md from questions.jsonl
-  build_dashboard.py + dashboard_template.html  # generate the results microsite
-dashboard/index.html     # generated results dashboard (committed; embeds the run's data)
+  build_site.py + site_template.html      # CURRENT results website: cross-model + tool-lift,
+                   #   ingests TWO runs (expanded + expanded_agentic) -> dashboard/index.html
+  build_dashboard.py + dashboard_template.html  # legacy single-run microsite (one summary)
+dashboard/index.html     # generated results website (committed; embeds both runs' data)
 tests/             # pytest (eccn scoring + aggregation math + parser/<think>-strip)
 ```
 
@@ -101,7 +103,10 @@ PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.json
 PYTHONPATH=src py -3.12 scripts/build_dashboard.py --summary results/comparison__summary.json
 # AGENTIC condition (Claude only): model navigates the CCL via tools before answering.
 PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
-  --models claude-opus-4-8 --verified-only --agentic --workers 4
+  --models claude-opus-4-8 --agentic --workers 4 --run-id expanded_agentic
+# Build the results WEBSITE from the two canonical runs (cross-model + tool-lift):
+PYTHONPATH=src py -3.12 scripts/build_site.py \
+  --crossmodel results/expanded__summary.json --agentic results/expanded_agentic__summary.json
 # Rebuild the CCL index from the eCFR (already committed; only if it needs refreshing):
 PYTHONPATH=src py -3.12 -m commoditybench.ccl.parse_ecfr --fetch
 ```
@@ -150,9 +155,15 @@ table links each item to its source (with the part to search for tool-based sour
 1. **Sign off the 11 new candidates**: spot-check ~2 per source via the worksheet, then set
    `verified: true` on the confirmed rows (edit `data/questions.jsonl`; keep notes/source
    intact) and `make_worksheet.py`. The Piper Cat-9 pair is the weakest — decide drop vs
-   keep first. Then re-run the comparison + dashboard on the larger verified set.
-2. **Re-run the agentic A/B** (now unblocked — keys are in `.env`) to confirm the tool-lift
-   numbers after the two loop-robustness fixes.
+   keep first. The agentic explorer on the site is a fast spot-check aid: the parts where
+   tools went *wrong* (`lnd-2311-b10`, the two Piper items) may be tool errors OR bad labels.
+   Then re-run `expanded` + `expanded_agentic` and rebuild the site on the larger verified set.
+2. **DONE this session — agentic tooling complete.** Built + overfitting-hardened + A/B'd on
+   the full 34 (exact 0.27→0.56, grade 0.41→0.64; lift generalizes to the new categories and
+   survives a generic prompt). Results website built (`scripts/build_site.py`). See
+   `results/agentic_ab_findings.md`. Remaining tool ideas if revisited: a precision guardrail
+   for the 5A991 telecom over-control (double-edged finding), and add the agentic condition to
+   gpt-4o/qwen3 (only the Anthropic adapter has `classify_agentic`).
 3. **Backfill still-empty categories 0/4/6/8.** Cat 6 regressed to empty (Thorlabs lasers
    cut) — re-source via DRS Infrared/Pelco (thermal cameras, 6A003) per the sourcing map.
    Cat 4 = Apple/HP/Oracle ECCN matrices; Cat 8 (marine) has few public sources. Cat 0 has
