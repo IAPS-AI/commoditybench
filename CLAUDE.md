@@ -66,6 +66,19 @@ RAG over the CCL, evaluated with vs. without retrieval.
   follow, plus a per-generation grade-ladder strip), and the hero reframed around the unified
   thesis *the lever is grounding, not scale*. `dashboard/generation_trendline.html` is kept as
   the standalone lightweight artifact.
+- **Subscription harness for the tools condition (NEW): `cc_harness/`.** Runs the agentic
+  (read-the-CCL) condition through a **Claude Code session on a Max subscription** instead of
+  burning API credits (the API agentic cross-gen run died on a credit wall). The folder is
+  self-contained: `CLAUDE.md` (the agentic system prompt + tool guide, auto-loaded so the
+  session *is* the model under test), `ccl.py` (the 4 CCL tools as a CLI — `categories/outline/
+  read/search`, vendored verbatim from `ccl/index.py`), vendored `ccl_index.json`, `questions.jsonl`
+  (the 23 verified items **sanitized** to id+name+description — no gold, no category), `record.py`
+  (writes answers to `../../cc_results/<label>__answers.jsonl`, **outside the repo** so runs can't
+  peek and no gold sits beside the questions), and `PROMPT.txt`. Grade with
+  `scripts/grade_cc_runs.py` (same graded scorer + run_eval-shaped output; prints the tool lift
+  vs. the no-tools `gen` baseline by label). **Caveat:** Claude Code's `/model` only exposes
+  current-gen (Opus 4.8 / Sonnet 4.6 / Haiku 4.5), so this yields the tools condition for those
+  (completing the 4.8 tool-lift point + a cross-tier tools comparison), not the full 4.1→4.8 ladder.
 - **Not done:** sign-off on the 11 new candidates; Cat **0/4/6/8 still empty**; equalized
   comparison; RAG index. Cross-model headline accuracy should still cite the 23-verified set;
   keep the not-equalized / tool-lift framing. The expanded runs include unverified items (for

@@ -1,0 +1,15 @@
+You are being evaluated as model `MODEL_LABEL`.
+
+Work through every item in questions.jsonl, in order, classifying each under the Commerce
+Control List exactly as described in CLAUDE.md. For each item: use ./ccl.py to READ the
+list (do not classify from memory, do not use web search, do not look for an answer key),
+decide the single ECCN (or EAR99), then record it with:
+
+  python record.py --model MODEL_LABEL --id <id> --eccn <ECCN> --category <0-9 or EAR99> --reasoning "<one sentence>" --calls <n>
+
+Do all of them without stopping for confirmation between items. When finished, print a
+summary table of id → your ECCN. Remember: the goal is to read the actual list and apply
+each entry's real thresholds, not to recall ECCNs.
+
+(Before you start, replace MODEL_LABEL above with the model you've selected in /model —
+e.g. opus-4.8, sonnet-4.6, or haiku-4.5 — and use that same label for every record.py call.)
