@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CommodityBench — capability across Claude generations</title>
+<style>
+ body{margin:0;background:#fbfaf7;color:#1f2933;font-family:system-ui,-apple-system,
+   "Segoe UI",Roboto,sans-serif;line-height:1.55}
+ .wrap{max-width:920px;margin:0 auto;padding:32px 24px 64px}
+ h1{font-size:24px;margin:0 0 4px} .sub{color:#6b7280;font-size:14px;margin:0 0 24px}
+ .card{background:#fff;border:1px solid #ece7dc;border-radius:12px;padding:20px;
+   box-shadow:0 1px 2px rgba(0,0,0,.03);margin-bottom:24px}
+ table{border-collapse:collapse;width:100%;font-size:13px}
+ th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #eee}
+ th{color:#6b7280;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+ td:first-child{font-weight:600}
+ .note{background:#fff7ec;border:1px solid #f3dcb5;border-radius:10px;padding:12px 16px;
+   font-size:13px;color:#7c4a03}
+ code{background:#f3f0e8;padding:1px 5px;border-radius:4px;font-size:12px}
+</style></head><body><div class="wrap">
+<h1>Capability across Claude generations</h1>
+<p class="sub">ECCN commodity classification · Opus generation ladder · verified set (n=23)
+ · METR-style trendline of accuracy vs. model release date</p>
+<div class="card"><svg viewBox="0 0 860 480" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><rect x="0" y="0" width="860" height="480" fill="#fbfaf7"/><line x1="70" y1="416.0" x2="680" y2="416.0" stroke="#e6e1d6" stroke-width="1"/><text x="60" y="420.0" font-size="11" fill="#6b7280" text-anchor="end">0.0</text><line x1="70" y1="342.4" x2="680" y2="342.4" stroke="#e6e1d6" stroke-width="1"/><text x="60" y="346.4" font-size="11" fill="#6b7280" text-anchor="end">0.2</text><line x1="70" y1="268.8" x2="680" y2="268.8" stroke="#e6e1d6" stroke-width="1"/><text x="60" y="272.8" font-size="11" fill="#6b7280" text-anchor="end">0.4</text><line x1="70" y1="195.2" x2="680" y2="195.2" stroke="#e6e1d6" stroke-width="1"/><text x="60" y="199.2" font-size="11" fill="#6b7280" text-anchor="end">0.6</text><line x1="70" y1="121.6" x2="680" y2="121.6" stroke="#e6e1d6" stroke-width="1"/><text x="60" y="125.6" font-size="11" fill="#6b7280" text-anchor="end">0.8</text><line x1="70" y1="48.0" x2="680" y2="48.0" stroke="#e6e1d6" stroke-width="1"/><text x="60" y="52.0" font-size="11" fill="#6b7280" text-anchor="end">1.0</text><line x1="70.0" y1="416" x2="70.0" y2="421" stroke="#9ca3af"/><text x="70.0" y="436" font-size="11" fill="#374151" text-anchor="middle">Opus 4.1</text><text x="70.0" y="450" font-size="9" fill="#9ca3af" text-anchor="middle">Aug 2025</text><line x1="298.8" y1="416" x2="298.8" y2="421" stroke="#9ca3af"/><text x="298.8" y="436" font-size="11" fill="#374151" text-anchor="middle">Opus 4.5</text><text x="298.8" y="450" font-size="9" fill="#9ca3af" text-anchor="middle">Nov 2025</text><line x1="447.1" y1="416" x2="447.1" y2="421" stroke="#9ca3af"/><text x="447.1" y="436" font-size="11" fill="#374151" text-anchor="middle">Opus 4.6</text><text x="447.1" y="450" font-size="9" fill="#9ca3af" text-anchor="middle">Feb 2026</text><line x1="589.3" y1="416" x2="589.3" y2="421" stroke="#9ca3af"/><text x="589.3" y="436" font-size="11" fill="#374151" text-anchor="middle">Opus 4.7</text><text x="589.3" y="450" font-size="9" fill="#9ca3af" text-anchor="middle">Apr 2026</text><line x1="680.0" y1="416" x2="680.0" y2="421" stroke="#9ca3af"/><text x="680.0" y="436" font-size="11" fill="#374151" text-anchor="middle">Opus 4.8</text><text x="680.0" y="450" font-size="9" fill="#9ca3af" text-anchor="middle">May 2026</text><line x1="70" y1="48" x2="70" y2="416" stroke="#374151"/><line x1="70" y1="416" x2="680" y2="416" stroke="#374151"/><text x="375" y="468" font-size="12" fill="#374151" text-anchor="middle">Model release date →</text><text transform="translate(18,232) rotate(-90)" font-size="12" fill="#374151" text-anchor="middle">Accuracy on verified set (n=23)</text><text x="692" y="50" font-size="11" fill="#9ca3af" font-weight="600">SERIES</text><path d="M 70.0,246.4 L 298.8,225.6 L 447.1,230.4 L 589.3,236.8 L 680.0,270.4" fill="none" stroke="#c2730a" stroke-width="2.5" stroke-dasharray="5,4"/><circle cx="70.0" cy="246.4" r="4.5" fill="#c2730a" /><circle cx="298.8" cy="225.6" r="4.5" fill="#c2730a" /><circle cx="447.1" cy="230.4" r="4.5" fill="#c2730a" /><circle cx="589.3" cy="236.8" r="4.5" fill="#c2730a" /><circle cx="680.0" cy="270.4" r="4.5" fill="#c2730a" /><line x1="692" y1="92" x2="724" y2="92" stroke="#c2730a" stroke-width="2.5" stroke-dasharray="5,4"/><text x="730" y="96" font-size="12" fill="#1f2933">grade · no tools</text><path d="M 70.0,288.0 L 298.8,272.0 L 447.1,272.0 L 589.3,272.0 L 680.0,336.0" fill="none" stroke="#0f766e" stroke-width="2.5" stroke-dasharray="5,4"/><circle cx="70.0" cy="288.0" r="4.5" fill="#0f766e" /><circle cx="298.8" cy="272.0" r="4.5" fill="#0f766e" /><circle cx="447.1" cy="272.0" r="4.5" fill="#0f766e" /><circle cx="589.3" cy="272.0" r="4.5" fill="#0f766e" /><circle cx="680.0" cy="336.0" r="4.5" fill="#0f766e" /><line x1="692" y1="140" x2="724" y2="140" stroke="#0f766e" stroke-width="2.5" stroke-dasharray="5,4"/><text x="730" y="144" font-size="12" fill="#1f2933">exact · no tools</text></svg></div>
+<div class="note" style="background:#fdeceb;border-color:#f3b6b3;color:#8a2a24"><strong>Tools condition pending.</strong> The agentic (CCL-navigation) run did not complete — the API account hit its credit balance partway through. Only the <em>no-tools</em> trendline is shown here. Re-run <code>--agentic --run-id gen_agentic</code> once credits are available, then rebuild with both <code>--notools</code> and <code>--agentic</code>.</div>
+<div class="card">
+ <table>
+  <tr><th>Generation</th><th>Released</th><th>exact · no tools</th><th>grade · no tools</th>
+      <th>exact · tools</th><th>grade · tools</th><th>errors (tools/no)</th></tr>
+  <tr><td>Opus 4.1</td><td>2025-08-05</td><td>0.3478</td><td>0.4609</td><td>—</td><td>—</td><td>—/0</td></tr>
+<tr><td>Opus 4.5</td><td>2025-11-24</td><td>0.3913</td><td>0.5174</td><td>—</td><td>—</td><td>—/0</td></tr>
+<tr><td>Opus 4.6</td><td>2026-02-04</td><td>0.3913</td><td>0.5043</td><td>—</td><td>—</td><td>—/0</td></tr>
+<tr><td>Opus 4.7</td><td>2026-04-14</td><td>0.3913</td><td>0.487</td><td>—</td><td>—</td><td>—/0</td></tr>
+<tr><td>Opus 4.8</td><td>2026-05-28</td><td>0.2174</td><td>0.3957</td><td>—</td><td>—</td><td>—/0</td></tr>
+ </table>
+</div>
+<div class="note"><strong>Capability snapshot, not an equalized comparison.</strong>
+ Each generation runs in its strongest <em>native</em> reasoning config — Opus 4.1/4.5 use
+ extended thinking (<code>budget_tokens</code>); 4.6/4.7/4.8 use adaptive thinking; 4.1 has
+ no <code>effort</code> parameter. n=23 verified questions, so each item is ≈0.04 of the
+ score — read the <em>shape</em> of the trend, not single-point gaps. "tools" = the model
+ navigates the parsed CCL via the <code>--agentic</code> condition before answering.</div>
+</div></body></html>
