@@ -3,397 +3,523 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CommodityBench — Results</title>
+<title>CommodityBench — can LLMs classify under the Commerce Control List?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0c0f17; --panel:#141926; --panel-2:#1b2233; --line:#26304a;
-    --ink:#e8edf7; --muted:#93a0bd; --faint:#64708f;
-    --exact:#34d399; --eccn:#7dd3a0; --group:#fbbf24; --category:#fb923c; --none:#f0556b;
-    --accent:#6aa6ff; --accent-soft:#1d3354;
-    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
-    -webkit-font-smoothing:antialiased;line-height:1.5}
-  a{color:var(--accent);text-decoration:none}
-  .wrap{max-width:1080px;margin:0 auto;padding:40px 24px 80px}
-  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;justify-content:space-between;
-    border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:32px}
-  h1{font-size:30px;margin:0;letter-spacing:-.02em}
-  h1 .dot{color:var(--accent)}
-  .sub{color:var(--muted);font-size:15px;margin-top:6px;max-width:60ch}
-  .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:12.5px}
-  .chip{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;
-    padding:4px 11px;color:var(--muted);font-family:var(--mono)}
-  .chip b{color:var(--ink);font-weight:600}
-  .chip.ok{border-color:#1f6f4f;background:#10271f;color:#7ee6b8}
-  .chip.warn{border-color:#7a5b1c;background:#2a210f;color:#f3c969}
+:root{
+  --ink:#0E1726; --ink2:#13203a; --panel:#16233f; --panel2:#1b2c4d;
+  --line:#26385c; --line2:#34507e;
+  --paper:#E9EDF2; --muted:#8A97A8; --faint:#5d6e87;
+  --amber:#E8A33D; --amber-dim:#C9772E;
+  --teal:#3FB6A8; --teal-lite:#7FC9A8;
+  --red:#D7472E;
+  --exact:#2BA89A; --t-eccn:#6FC4A6; --t-group:#E8A33D; --t-cat:#C9772E; --t-none:#3a4d72; --t-err:#7a3330;
+  --disp:'Space Grotesk',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--body);
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(900px 500px at 85% -8%, rgba(63,182,168,.10), transparent 60%),
+    radial-gradient(700px 460px at 8% 4%, rgba(232,163,61,.08), transparent 60%);
+  background-attachment:fixed;}
+a{color:inherit}
+h1,h2,h3{font-family:var(--disp);font-weight:600;line-height:1.04;margin:0}
+.mono{font-family:var(--mono)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--amber)}
+.muted{color:var(--muted)}
 
-  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--faint);
-    margin:40px 0 14px;font-weight:600}
+/* ---- top bar ---- */
+.topbar{position:sticky;top:0;z-index:40;backdrop-filter:blur(10px);
+  background:rgba(14,23,38,.82);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:16px;height:56px}
+.brand{font-family:var(--mono);font-weight:600;letter-spacing:.04em}
+.brand b{color:var(--teal)}
+.topbar nav{margin-left:auto;display:flex;gap:22px;font-size:13px}
+.topbar nav a{color:var(--muted);text-decoration:none;transition:color .15s}
+.topbar nav a:hover{color:var(--paper)}
+.badge{font-family:var(--mono);font-size:11px;border:1px solid var(--line2);
+  border-radius:999px;padding:3px 10px;color:var(--muted)}
 
-  /* metric cards */
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px}
-  .card .label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-  .card .val{font-size:34px;font-weight:680;letter-spacing:-.02em;margin-top:8px;font-family:var(--mono)}
-  .card .val small{font-size:15px;color:var(--faint);font-weight:500}
-  .card.hero{background:linear-gradient(160deg,var(--accent-soft),var(--panel));border-color:#345084}
-  .bar{height:5px;border-radius:3px;background:var(--panel-2);margin-top:12px;overflow:hidden}
-  .bar > i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+/* ---- hero ---- */
+.hero{padding:84px 0 56px;border-bottom:1px solid var(--line)}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(40px,6.4vw,76px);letter-spacing:-.02em}
+.hero h1 .em{color:var(--teal);font-style:italic;font-weight:500}
+.hero .dek{margin-top:22px;font-size:18px;max-width:46ch;color:#c4cdda}
+.hero .stamp{display:inline-flex;align-items:center;gap:9px;margin-bottom:26px}
+.stamp .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(232,163,61,.16)}
 
-  /* grade ladder */
-  .ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-  .rung{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 14px}
-  .rung .w{font-family:var(--mono);font-size:20px;font-weight:680}
-  .rung .n{font-size:12.5px;color:var(--muted);margin-top:3px}
-  .rung .d{font-size:11.5px;color:var(--faint);margin-top:6px;line-height:1.4}
-  .swatch{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle;margin-right:6px}
+/* lift instrument */
+.instrument{background:linear-gradient(180deg,var(--panel),var(--ink2));
+  border:1px solid var(--line2);border-radius:16px;padding:26px 26px 22px;
+  box-shadow:0 24px 60px -30px rgba(0,0,0,.7)}
+.instrument .ilabel{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.liftrow{display:flex;align-items:baseline;gap:14px;margin:6px 0 18px}
+.liftrow .from{font-family:var(--disp);font-size:30px;color:var(--faint)}
+.liftrow .arrow{color:var(--teal)}
+.liftrow .to{font-family:var(--disp);font-size:54px;font-weight:700;color:var(--teal);letter-spacing:-.02em}
+.liftrow .delta{font-family:var(--mono);font-size:13px;color:var(--teal);
+  border:1px solid rgba(63,182,168,.4);border-radius:6px;padding:2px 8px;align-self:center}
+.barpair{display:grid;gap:10px}
+.bar{height:30px;border-radius:7px;background:#0c1426;border:1px solid var(--line);position:relative;overflow:hidden}
+.bar .fill{position:absolute;inset:0;width:0;transition:width 1.1s cubic-bezier(.22,1,.36,1)}
+.bar.base .fill{background:linear-gradient(90deg,#46566f,#5d6e87)}
+.bar.tool .fill{background:linear-gradient(90deg,var(--teal),var(--teal-lite))}
+.bar .tag{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:#dfe6ee;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.bar .val{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:13px;font-weight:600;z-index:2}
 
-  /* insights */
-  .insights{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  @media(max-width:680px){.insights{grid-template-columns:1fr}}
-  .insight{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .insight .h{font-weight:650;font-size:15px;margin-bottom:6px;display:flex;gap:8px;align-items:center}
-  .insight .b{color:var(--muted);font-size:13.5px}
-  .insight .big{font-family:var(--mono);font-size:22px;color:var(--ink);font-weight:680}
-  .tag{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:6px;background:var(--panel-2);color:var(--muted)}
+/* ECCN decoder motif */
+.decoder{margin-top:20px;display:flex;flex-wrap:wrap;gap:7px;align-items:stretch}
+.seg{border:1px solid var(--line2);border-radius:8px;padding:7px 11px;background:#0d1729;min-width:54px}
+.seg .g{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--paper)}
+.seg .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+.seg.c{border-color:rgba(232,163,61,.5)} .seg.c .g{color:var(--amber)}
+.seg.sub{border-color:rgba(63,182,168,.45)} .seg.sub .g{color:var(--teal)}
 
-  /* table */
-  .tablecard{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-  .controls{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);align-items:center}
-  .controls .filt{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
-    border-radius:8px;padding:6px 11px;font-size:12.5px;cursor:pointer;font-family:var(--mono)}
-  .controls .filt.active{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
-  .controls .sp{flex:1}
-  table{width:100%;border-collapse:collapse;font-size:13.5px}
-  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);
-    text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);font-weight:600;
-    cursor:pointer;user-select:none;white-space:nowrap}
-  th .ar{opacity:.5;font-size:9px}
-  td{padding:11px 16px;border-bottom:1px solid #1c2333;vertical-align:top}
-  tr:last-child td{border-bottom:none}
-  tr.row:hover{background:var(--panel-2)}
-  .ecc{font-family:var(--mono);font-size:13px}
-  .gold{color:var(--ink)}
-  .pred{color:var(--muted)}
-  .lvl{font-family:var(--mono);font-size:11px;padding:2px 9px;border-radius:999px;white-space:nowrap;
-    border:1px solid transparent}
-  .lvl.exact{color:var(--exact);background:#0f2a20;border-color:#1f6f4f}
-  .lvl.eccn{color:var(--eccn);background:#13261c;border-color:#2c5f3f}
-  .lvl.group{color:var(--group);background:#2a2310;border-color:#6b521b}
-  .lvl.category{color:var(--category);background:#2a1d10;border-color:#6b451b}
-  .lvl.none{color:var(--none);background:#2a1318;border-color:#6f2230}
-  .gr{font-family:var(--mono);color:var(--faint)}
-  .item{max-width:330px}
-  .item .nm{color:var(--ink)}
-  .item .id{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:2px}
-  .reason{font-size:12px;color:var(--faint);margin-top:7px;display:none;line-height:1.5;
-    border-left:2px solid var(--line);padding-left:10px}
-  tr.row.open .reason{display:block}
-  .expand{font-size:11px;color:var(--accent);cursor:pointer;margin-top:6px;display:inline-block}
+/* ---- sections ---- */
+section{padding:64px 0;border-bottom:1px solid var(--line)}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:30px;flex-wrap:wrap}
+.sec-head h2{font-size:clamp(26px,3.4vw,38px);letter-spacing:-.015em}
+.sec-head p{margin:8px 0 0;color:var(--muted);max-width:54ch;font-size:15px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
 
-  footer{margin-top:40px;color:var(--faint);font-size:12px;line-height:1.7;border-top:1px solid var(--line);padding-top:20px}
-  .modelpick{display:flex;gap:8px;flex-wrap:wrap}
-  .modelpick button{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
-    border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:var(--mono)}
-  .modelpick button.active{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+/* toggle */
+.toggle{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden;font-family:var(--mono);font-size:12px}
+.toggle button{background:transparent;color:var(--muted);border:0;padding:8px 14px;cursor:pointer;letter-spacing:.06em}
+.toggle button.on{background:var(--teal);color:#062a26;font-weight:600}
 
-  /* leaderboard */
-  table.board td, table.board th{padding:13px 16px}
-  table.board th{text-align:right}
-  table.board th:first-child{text-align:left}
-  .rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;
-    background:var(--panel-2);color:var(--muted);font-family:var(--mono);font-size:12px;margin-right:10px}
-  .rank.r1{background:linear-gradient(140deg,#3a3413,#2a2310);color:#f3c969;border:1px solid #6b521b}
-  .mname{font-family:var(--mono);font-size:13.5px;color:var(--ink)}
-  .cellbar{position:relative;min-width:118px}
-  .cellbar .v{font-family:var(--mono);font-size:13px;text-align:right;display:block}
-  .cellbar .track{height:4px;border-radius:2px;background:var(--panel-2);margin-top:6px;overflow:hidden}
-  .cellbar .track > i{display:block;height:100%;border-radius:2px;background:var(--accent);opacity:.85}
-  .cellbar.best .v{color:var(--exact);font-weight:680}
-  .cellbar.best .track > i{background:var(--exact)}
-  td.numcell{text-align:right;vertical-align:middle}
+/* leaderboard */
+.lb{display:grid;gap:14px}
+.lb-row{display:grid;grid-template-columns:240px 1fr 150px;gap:22px;align-items:center;
+  background:linear-gradient(180deg,var(--panel),var(--ink2));border:1px solid var(--line);
+  border-radius:13px;padding:18px 20px;transition:border-color .2s,transform .2s}
+.lb-row:hover{border-color:var(--line2);transform:translateY(-1px)}
+.lb-row .rank{font-family:var(--disp);font-size:13px;color:var(--faint);margin-right:2px}
+.lb-name{font-family:var(--disp);font-size:20px;font-weight:600;display:flex;align-items:baseline;gap:9px}
+.lb-name .open{font-size:10px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(232,163,61,.4);border-radius:5px;padding:1px 6px}
+.lb-meta{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:3px}
+.lb-metrics{text-align:right}
+.lb-metrics .grade{font-family:var(--disp);font-size:34px;font-weight:700;letter-spacing:-.02em}
+.lb-metrics .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* stacked ladder bar */
+.ladder{height:34px;border-radius:7px;overflow:hidden;display:flex;border:1px solid var(--line);background:#0c1426}
+.ladder span{height:100%;transition:width .8s cubic-bezier(.22,1,.36,1);min-width:0}
+.lx-exact{background:var(--exact)} .lx-eccn{background:var(--t-eccn)} .lx-group{background:var(--t-group)}
+.lx-category{background:var(--t-cat)} .lx-none{background:var(--t-none)}
+.lx-error{background:repeating-linear-gradient(45deg,var(--t-err),var(--t-err) 5px,#5a2522 5px,#5a2522 10px)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* tool-lift split stats */
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px}
+.stat{background:linear-gradient(180deg,var(--panel),var(--ink2));border:1px solid var(--line);border-radius:12px;padding:18px}
+.stat .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--disp);font-size:30px;font-weight:700;margin-top:8px;display:flex;align-items:baseline;gap:8px}
+.stat .v .b4{font-size:17px;color:var(--faint);font-weight:500}
+.stat .v .ar{color:var(--teal);font-size:15px}
+.stat .up{color:var(--teal)} .stat .dn{color:var(--red)}
+
+/* per-category lift chart */
+.catchart{display:grid;gap:11px}
+.catrow{display:grid;grid-template-columns:190px 1fr 70px;gap:16px;align-items:center}
+.catrow .cl{font-size:14px}
+.catrow .cl .cc{font-family:var(--mono);color:var(--amber);font-size:12px;margin-right:7px}
+.catrow .cl .n{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.track{position:relative;height:24px;background:#0c1426;border:1px solid var(--line);border-radius:6px}
+.track .b{position:absolute;top:0;bottom:0;border-radius:5px}
+.track .b.base{background:#46566f;opacity:.85}
+.track .b.tool{background:linear-gradient(90deg,var(--teal),var(--teal-lite));mix-blend-mode:screen}
+.catrow .cd{font-family:var(--mono);font-size:13px;text-align:right}
+
+/* case studies */
+.cases{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:8px}
+.case{background:linear-gradient(180deg,var(--panel),var(--ink2));border:1px solid var(--line);border-radius:13px;padding:20px;border-left:3px solid var(--line2)}
+.case.win{border-left-color:var(--teal)} .case.trap{border-left-color:var(--amber)} .case.limit{border-left-color:var(--red)}
+.case .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+.case.win .tag{color:var(--teal)} .case.trap .tag{color:var(--amber)} .case.limit .tag{color:var(--red)}
+.case h3{font-size:17px;margin:9px 0 4px}
+.case .itm{font-size:13.5px;color:var(--muted);margin-bottom:14px}
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:13px}
+.chip{border:1px solid var(--line2);border-radius:6px;padding:4px 9px;background:#0d1729}
+.chip.gold{border-color:rgba(63,182,168,.5);color:var(--teal)}
+.chip.bad{border-color:rgba(215,71,46,.5);color:#ef8c7b}
+.chip.good{border-color:rgba(63,182,168,.5);color:var(--teal)}
+.flow .arr{color:var(--faint)}
+.case .note{margin-top:13px;font-size:13.5px;color:#b9c2d0}
+
+/* explorer */
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+.controls select,.controls input{background:var(--panel);color:var(--paper);border:1px solid var(--line2);
+  border-radius:8px;padding:8px 11px;font-family:var(--mono);font-size:12.5px}
+.qtable{width:100%;border-collapse:collapse;font-size:13.5px}
+.qtable th{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  text-align:left;padding:10px 12px;border-bottom:1px solid var(--line2);position:sticky;top:56px;background:var(--ink)}
+.qtable td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.qtable tr.q{cursor:pointer;transition:background .12s}
+.qtable tr.q:hover{background:var(--ink2)}
+.qtable .item{max-width:300px}
+.qtable .item .nm{color:var(--paper)}
+.qtable .item .id{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.eccn{font-family:var(--mono);font-size:13px}
+.gchip{display:inline-block;min-width:30px;text-align:center;font-family:var(--mono);font-size:11px;
+  border-radius:5px;padding:2px 6px}
+.unver{font-family:var(--mono);font-size:9.5px;color:var(--amber);border:1px solid rgba(232,163,61,.4);border-radius:4px;padding:0 5px;margin-left:6px}
+.detail{background:#0c1525}
+.detail td{padding:0}
+.detail .inner{padding:18px 22px}
+.trace{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 14px}
+.tcall{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line2);border-radius:6px;padding:5px 9px;background:#0d1729}
+.tcall b{color:var(--teal);font-weight:600}
+.tcall .arg{color:var(--amber)}
+.detail .rsn{font-size:13.5px;color:#c0c9d6;max-width:80ch}
+.detail .rsn .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+
+/* method */
+.method{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.mcard{background:linear-gradient(180deg,var(--panel),var(--ink2));border:1px solid var(--line);border-radius:12px;padding:20px}
+.mcard h3{font-size:16px;margin-bottom:8px;color:var(--amber)}
+.mcard p{margin:0;font-size:13.5px;color:#b9c2d0}
+.mcard .gw{font-family:var(--mono);font-size:12px;margin-top:10px;color:var(--muted)}
+.callout{background:rgba(232,163,61,.08);border:1px solid rgba(232,163,61,.3);border-radius:12px;
+  padding:16px 20px;margin-top:24px;font-size:14px;color:#e7d4b0}
+.callout b{color:var(--amber)}
+footer{padding:40px 0 70px;color:var(--faint);font-size:12.5px;font-family:var(--mono)}
+footer a{color:var(--teal);text-decoration:none}
+
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+@media (max-width:860px){
+  .hero-grid{grid-template-columns:1fr;gap:32px}
+  .statgrid{grid-template-columns:repeat(2,1fr)}
+  .cases,.method{grid-template-columns:1fr}
+  .lb-row{grid-template-columns:1fr;gap:14px}
+  .lb-metrics{text-align:left}
+  .catrow{grid-template-columns:130px 1fr 56px}
+  .qtable .hide-sm{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
+<div class="topbar"><div class="wrap">
+  <span class="brand">Commodity<b>Bench</b></span>
+  <nav>
+    <a href="#models">Models</a>
+    <a href="#lift">Tool lift</a>
+    <a href="#cases">Where it breaks</a>
+    <a href="#explorer">Every item</a>
+    <a href="#method">Method</a>
+  </nav>
+  <span class="badge" id="nbadge"></span>
+</div></div>
+
+<header class="hero"><div class="wrap"><div class="hero-grid">
+  <div>
+    <div class="stamp"><span class="dot"></span><span class="eyebrow">CommodityBench · IAPS · export-control eval</span></div>
+    <h1>Reading the list<br>beats <span class="em">reciting</span> it.</h1>
+    <p class="dek">Can a language model do what BIS does — assign a commodity its Export Control
+      Classification Number under the US Commerce Control List? It's hard from memory. Give the
+      model tools to <em>read</em> the actual list, and the same model gets markedly better.</p>
+    <div class="decoder" aria-label="Anatomy of an ECCN">
+      <div class="seg c"><div class="g" id="dc">3</div><div class="l">category</div></div>
+      <div class="seg c"><div class="g">A</div><div class="l">group</div></div>
+      <div class="seg c"><div class="g">991</div><div class="l">number</div></div>
+      <div class="seg sub"><div class="g">.a.2</div><div class="l">subparagraph</div></div>
+    </div>
+  </div>
+  <div class="instrument reveal" id="heroInstr">
+    <div class="ilabel">Within-model · mean graded score · all <span id="hin"></span> items</div>
+    <div class="liftrow">
+      <span class="from" id="hfrom">—</span><span class="arrow">→</span>
+      <span class="to" id="hto">—</span><span class="delta" id="hdelta"></span>
+    </div>
+    <div class="barpair">
+      <div class="bar base"><span class="tag">no tools — recite from memory</span><span class="fill" data-w="0"></span><span class="val" id="hbv"></span></div>
+      <div class="bar tool"><span class="tag">agentic — read the CCL</span><span class="fill" data-w="0"></span><span class="val" id="htv"></span></div>
+    </div>
+    <div class="ilabel" style="margin-top:16px;color:var(--faint)" id="hmeta"></div>
+  </div>
+</div></div></header>
+
+<section id="models"><div class="wrap">
+  <div class="sec-head">
     <div>
-      <h1>Commodity<span class="dot">Bench</span></h1>
-      <div class="sub">How well can an LLM assign a commodity its correct <b>Export Control
-        Classification Number</b> (ECCN) under the US Commerce Control List — the task BIS performs.</div>
+      <div class="kicker">01 · Capability snapshot — no tools</div>
+      <h2>How well do the models do alone?</h2>
+      <p>One-shot classification, answer from the model's own knowledge. Bars show <em>where</em>
+        each answer lands on the graded-scoring ladder — full credit for the exact ECCN down to
+        partial credit for the right category.</p>
     </div>
-    <div class="meta" id="meta"></div>
-  </header>
-
-  <div id="board-wrap" style="display:none">
-    <h2>Leaderboard — ranked by mean graded score</h2>
-    <div class="tablecard">
-      <table class="board">
-        <thead><tr id="board-head"></tr></thead>
-        <tbody id="board-body"></tbody>
-      </table>
+    <div class="toggle" id="lbToggle">
+      <button data-split="all" class="on">All 34</button>
+      <button data-split="verified">Verified 23</button>
     </div>
-    <div class="sub" style="margin-top:12px;font-size:12.5px">⚠ <b>Not equalized:</b> models run on
-      their own native settings (Claude &amp; Qwen3 with reasoning on; GPT-4o at temp 0). Treat this as a
-      capability snapshot, not a controlled head-to-head ranking.</div>
   </div>
-
-  <div id="modelpick-wrap" style="display:none">
-    <h2>Drill into a model</h2>
-    <div class="modelpick" id="modelpick"></div>
+  <div class="lb" id="leaderboard"></div>
+  <div class="legend">
+    <span><i style="background:var(--exact)"></i>exact (1.0)</span>
+    <span><i style="background:var(--t-eccn)"></i>ECCN head (0.7)</span>
+    <span><i style="background:var(--t-group)"></i>cat+group (0.4)</span>
+    <span><i style="background:var(--t-cat)"></i>category (0.2)</span>
+    <span><i style="background:var(--t-none)"></i>miss (0)</span>
+    <span><i style="background:#7a3330"></i>error</span>
   </div>
+  <div class="callout"><b>Not an equalized ranking.</b> Claude and Qwen3 run with reasoning on;
+    GPT-4o at temperature 0. Read this as a capability snapshot, not a head-to-head verdict.</div>
+</div></section>
 
-  <h2>Headline — <span id="hl-model" style="text-transform:none;letter-spacing:0;color:var(--muted)"></span></h2>
-  <div class="cards" id="cards"></div>
-
-  <h2>Graded scoring — partial credit by how close the answer lands</h2>
-  <div class="ladder" id="ladder"></div>
-
-  <h2>What the model got wrong</h2>
-  <div class="insights" id="insights"></div>
-
-  <h2>Per-question results</h2>
-  <div class="tablecard">
-    <div class="controls" id="controls">
-      <span style="color:var(--faint);font-size:12px;font-family:var(--mono)">filter:</span>
-      <span class="filt active" data-f="all">all</span>
-      <span class="filt" data-f="exact">exact</span>
-      <span class="filt" data-f="eccn">eccn</span>
-      <span class="filt" data-f="group">group</span>
-      <span class="filt" data-f="category">category</span>
-      <span class="filt" data-f="none">miss</span>
-      <span class="sp"></span>
-      <span style="color:var(--faint);font-size:12px" id="rowcount"></span>
+<section id="lift"><div class="wrap">
+  <div class="sec-head">
+    <div>
+      <div class="kicker">02 · The intervention — within-model</div>
+      <h2 id="liftHead">Give one model the list to read</h2>
+      <p>Same model, same questions. In the <em>agentic</em> condition it calls four tools to walk
+        the Commerce Control List — list categories, read a category's outline, read an entry's
+        full text and thresholds, search — then submits an answer. <span id="toolavg"></span></p>
     </div>
-    <table>
-      <thead><tr>
-        <th data-s="item">Item <span class="ar">▼</span></th>
-        <th data-s="gold_eccn">Gold ECCN <span class="ar"></span></th>
-        <th data-s="predicted_eccn">Predicted <span class="ar"></span></th>
-        <th data-s="level">Result <span class="ar"></span></th>
-        <th data-s="grade" style="text-align:right">Grade <span class="ar"></span></th>
-      </tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
+    <div class="toggle" id="liftToggle">
+      <button data-split="all" class="on">All 34</button>
+      <button data-split="verified">Verified 23</button>
+    </div>
   </div>
+  <div class="statgrid" id="liftStats"></div>
+  <div class="kicker" style="margin-top:6px">Lift by CCL category — mean graded score</div>
+  <div class="catchart" id="catChart"></div>
+</div></section>
 
-  <footer id="footer"></footer>
-</div>
+<section id="cases"><div class="wrap">
+  <div class="sec-head">
+    <div>
+      <div class="kicker">03 · Where tools help — and where they don't</div>
+      <h2>Recall problems, fixed. Judgment calls, not.</h2>
+      <p>The tools decisively fix failures that were really <em>recall</em> gaps — entries the model
+        forgot exist, thresholds it half-remembered. They barely move (and can worsen) the calls
+        that hinge on judgment about borderline language. The new categories below were added
+        <em>after</em> the tools were built — the model couldn't have been tuned to them.</p>
+    </div>
+  </div>
+  <div class="cases" id="caseGrid"></div>
+</div></section>
 
-<script id="data" type="application/json">{"report": {"run_id": "comparison", "dataset": "data/questions.jsonl", "n_questions": 23, "verified_only": true, "rag": false, "workers": 8, "citable": true, "note": "Verified-only run.", "models": [{"model": "claude-opus-4-8", "n": 23, "attempted": 23, "errors": 0, "error_rate": 0.0, "exact_accuracy": 0.2609, "eccn_accuracy": 0.3913, "group_accuracy": 0.6087, "category_accuracy": 0.6087, "parse_rate": 1.0, "mean_grade": 0.4391, "exact_accuracy_attempted": 0.2609}, {"model": "gpt-4o", "n": 23, "attempted": 23, "errors": 0, "error_rate": 0.0, "exact_accuracy": 0.1739, "eccn_accuracy": 0.3043, "group_accuracy": 0.5652, "category_accuracy": 0.5652, "parse_rate": 1.0, "mean_grade": 0.3696, "exact_accuracy_attempted": 0.1739}, {"model": "qwen3-32b", "n": 23, "attempted": 23, "errors": 0, "error_rate": 0.0, "exact_accuracy": 0.0435, "eccn_accuracy": 0.087, "group_accuracy": 0.3043, "category_accuracy": 0.3043, "parse_rate": 1.0, "mean_grade": 0.1609, "exact_accuracy_attempted": 0.0435}]}, "rows": {"claude-opus-4-8": [{"id": "adi-ad7768bstz", "item_name": "8-channel 24-bit sigma-delta ADC, 256 kSPS", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "Under 3A001.a.5 ADCs are controlled by resolution/sample-rate thresholds; for resolution greater than 14 bits the control trigger is an output rate exceeding ~0.4 GSPS (hundreds of MSPS). This 24-bit converter samples at only 256 kSPS (0.256 MSPS), far below any 3A001.a.5 threshold, so it is not described by that or any other CCL entry and is classified EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 808, "output_tokens": 670}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "adi-ad9081bbpz-4d4ab", "item_name": "Quad RF-DAC / quad RF-ADC mixed-signal front-end", "gold_eccn": "3A001.a.5.a.3", "predicted_eccn": "3A001.a.5", "category": "3", "verified": true, "reasoning": "The device integrates ADC channels at 4 GSPS (4000 MSPS), far exceeding the 3A001.a.5 thresholds for analog-to-digital converters (e.g., >1.0 GSPS at 12-bit resolution). It also contains 12 GSPS DACs that independently meet 3A001.a.6 DAC limits, but the high-speed ADC function squarely places this mixed-signal front-end under Category 3 microelectronics control 3A001.a.5.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 848, "output_tokens": 863}, "score": {"exact_match": false, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.7, "level": "eccn"}}, {"id": "adi-ad9162bbcz", "item_name": "6 GSPS RF digital-to-analog converter, to 5 GHz", "gold_eccn": "3A001.a.5.b.2", "predicted_eccn": "3A001.a.5.b", "category": "3", "verified": true, "reasoning": "The item is a digital-to-analog converter with 16-bit resolution and a 6 GSPS (6000 MSPS) update rate. ECCN 3A001.a.5.b controls DACs with a resolution of 14 bit or more and an adjusted update rate greater than 2,500 MSPS; this device exceeds both thresholds.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 818, "output_tokens": 519}, "score": {"exact_match": false, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.7, "level": "eccn"}}, {"id": "adi-ad9361bbcz", "item_name": "Wideband 2x2 RF agile transceiver, 47 MHz-6 GHz", "gold_eccn": "5A991.b.1", "predicted_eccn": "5A001.b.3", "category": "5", "verified": true, "reasoning": "Frequency-agile 2x2 transceiver covering 47 MHz-6 GHz with up to 56 MHz channel bandwidth and integrated DSP/data-converter baseband for software-defined radio falls under Cat 5 Part 1 telecom equipment; 5A001.b.3 controls radio equipment employing digital techniques (DSP) to provide frequency hopping/agile spread-spectrum operation. Subparagraph chosen over a Cat 3 component classification because the item is a complete tunable agile RF transceiver for SDR/wireless infrastructure rather than a standalone IC component.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 849, "output_tokens": 1197}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "adi-adau1452kcpz", "item_name": "300 MHz 32-bit audio digital signal processor", "gold_eccn": "3A991.a.2", "predicted_eccn": "EAR99", "category": "3", "verified": true, "reasoning": "A 300 MHz single-core 32-bit audio DSP for consumer/commercial audio processing (mixing, filtering, equalization) does not meet the performance thresholds or special design criteria of Category 3 microprocessor/microcircuit controls (3A001.a.3 et seq.). Its modest clock speed and audio-only application place it well below any ADP/microprocessor performance parameters, and it is not specially designed for controlled signal-processing applications. It is subject to the EAR but not described on the CCL, hence EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 787, "output_tokens": 203}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-adf7021bcpz", "item_name": "Narrow-band sub-1 GHz ISM RF transceiver", "gold_eccn": "EAR99", "predicted_eccn": "5A001.b.3", "category": "EAR99", "verified": true, "reasoning": "This is a radio communications transceiver operating in sub-1 GHz ISM bands. As a standard low-power, narrow-band FSK/GFSK ISM-band RF transceiver for metering and wireless data links, it does not employ frequency hopping/spread spectrum beyond civil norms, but commercial wireless transceivers fall under Category 5 Part 1 telecommunications. However, given it is a mass-market low-power ISM device lacking controlled performance parameters (no specified encryption, no high power, standard civil modulation), it most likely classifies as EAR99 unless it incorporates controlled functionality. Absent additional controlled features, the device is best classified as EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 809, "output_tokens": 252}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-adrv9009bbcz", "item_name": "Integrated dual-channel RF transceiver, 75 MHz-6 GHz", "gold_eccn": "5A991.b.1", "predicted_eccn": "5A991", "category": "5", "verified": true, "reasoning": "The item is a highly integrated RF transceiver IC intended for software-defined radio and wireless communications infrastructure (transmit/receive channels, on-chip synthesizers, digital filtering). As a telecommunications transceiver component operating 75 MHz–6 GHz, it falls in CCL Category 5 Part 1. It does not meet the specific control thresholds of 5A001 (e.g., dedicated spread-spectrum/anti-jam, channel-hop, or specialized SIGINT features), so it is captured under the residual telecommunications entry 5A991 for equipment/components not controlled by 5A001.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 827, "output_tokens": 1623}, "score": {"exact_match": false, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.7, "level": "eccn"}}, {"id": "adi-adsp-sc589bbcz-4b", "item_name": "Dual-SHARC + ARM system-on-chip processor", "gold_eccn": "5A992.c", "predicted_eccn": "3A991.a.1", "category": "5", "verified": true, "reasoning": "This is a general-purpose microprocessor/DSP system-on-chip (ARM Cortex-A5 plus two floating-point SHARC DSP cores) for commercial audio, industrial and signal-processing use. It is not a microwave/specialized military component, so it falls under 3A991.a.1 covering microprocessor microcircuits and related processing devices not controlled by 3A001. Such a commercial heterogeneous DSP/SoC does not meet the high-performance ADC/computing thresholds of 3A001.a.7, so 3A991 (anti-terrorism controlled) is the appropriate catch-all electronics classification.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 798, "output_tokens": 237}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-maxq1061etp", "item_name": "Cryptographic security controller IC", "gold_eccn": "5A992.c", "predicted_eccn": "5A002.a", "category": "5", "verified": true, "reasoning": "The item is a hardware IC implementing cryptography for data confidentiality using AES symmetric and ECDH/ECDSA public-key algorithms exceeding the 56-bit symmetric / 512-bit asymmetric thresholds, classified under Category 5 Part 2 'Information Security.' As a commodity 'designed or modified to use cryptography employing digital techniques performing cryptographic functions other than authentication or digital signature,' it falls under 5A002.a (information security functions including secure key storage, TRNG, and secure-boot acceleration).", "parsed_ok": true, "error": null, "usage": {"input_tokens": 788, "output_tokens": 210}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "espressif-esp32-wroom-32e-n4", "item_name": "2.4 GHz Wi-Fi + Bluetooth module, 4 MB flash", "gold_eccn": "5A992.c", "predicted_eccn": "5A992.c", "category": "5", "verified": true, "reasoning": "This is a wireless communications module (Wi-Fi 802.11 b/g/n + Bluetooth/BLE) employing radio-frequency transceiver functionality. Such commercial short-range RF transceivers fall under Category 5 Part 1. If it incorporates encryption for the wireless link (typical for Wi-Fi/BLE), it is classified as a mass-market encryption item under 5A992.c; absent controlled-strength cryptography it would otherwise be EAR99, but standard Wi-Fi/Bluetooth security places it in 5A992.c.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 817, "output_tokens": 214}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "lattice-ice40hx4k-tq144", "item_name": "Low-power FPGA, ~3,520 logic cells", "gold_eccn": "EAR99", "predicted_eccn": "3A001.a.7", "category": "EAR99", "verified": true, "reasoning": "FPGAs are integrated circuits controlled under Category 3 (Electronics). Programmable logic devices/field programmable logic devices fall under 3A001.a.7 as general-purpose ICs. This low-power, low-density FPGA does not meet advanced thresholds but is still described by the programmable logic device entry; absent meeting performance limits it remains classified under 3A001.a.7.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 799, "output_tokens": 157}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-atecc608b-mahda-t", "item_name": "Secure element / crypto authentication IC", "gold_eccn": "5A992.c", "predicted_eccn": "5A002.a", "category": "5", "verified": true, "reasoning": "The secure element implements 'information security' cryptography for confidentiality using symmetric (AES-128) and asymmetric (ECDSA/ECDH elliptic curve) algorithms exceeding the technical thresholds in Note to 5A002.a (symmetric >56 bits, asymmetric ECC >112 bits). As a hardware component designed/modified to use cryptography employing digital techniques performing cryptographic functions, it is classified under 5A002.a (Category 5, Part 2).", "parsed_ok": true, "error": null, "usage": {"input_tokens": 782, "output_tokens": 190}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "microchip-dspic33ep512mu810-i-pf", "item_name": "16-bit digital signal controller, 60 MIPS", "gold_eccn": "3A991.a.2", "predicted_eccn": "EAR99", "category": "3", "verified": true, "reasoning": "A general-purpose 16-bit DSC running at 60 MIPS with integrated flash/RAM, USB, CAN, and DMA is a commercial microcontroller/DSP for motor control and embedded use. It does not meet the high-performance microprocessor/ADC thresholds or specialized parameters of Category 3 entries (e.g., 3A001.a.1-.7); ordinary commercial DSPs/microcontrollers are not specifically controlled and fall under EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 806, "output_tokens": 188}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-ksz8794cnxic-tr", "item_name": "Four-port managed 10/100 Ethernet switch", "gold_eccn": "EAR99", "predicted_eccn": "5A991.b.4", "category": "EAR99", "verified": true, "reasoning": "This is a network communications switch (Layer-2 managed Ethernet switch) subject to the EAR under Category 5 Part 1 (telecommunications). It does not meet the higher performance/encryption thresholds of 5A001, so it falls under 5A991 as telecommunications equipment, specifically network switching/communications apparatus per 5A991.b.4. Basic 10/100 Layer-2 switching with no controlled cryptographic functionality places it in this general telecom-equipment classification rather than EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 792, "output_tokens": 197}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-lan8720a-cp-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "A standard 10/100 Ethernet PHY transceiver operating at 100 Mbps with an RMII interface is ordinary commercial telecommunications/networking infrastructure. It does not meet the thresholds or special functions controlled under Category 5 Part 1 (e.g., 5A001) such as exceeding the digital transfer rate limits or providing controlled cryptographic functionality, and it is not described by any other CCL entry, so it is EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 818, "output_tokens": 179}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "microchip-lan8742a-cz-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "A standard 10/100 Mbps Ethernet PHY transceiver provides commodity-grade physical-layer signaling well below any performance thresholds in Category 5 Part 1 (telecommunications) or Category 4. Such low-speed embedded networking ICs are not described by any specific CCL entry (e.g., 5A001 telecom equipment thresholds far exceed these speeds), so the item is subject to the EAR but classified EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 782, "output_tokens": 176}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "microchip-pic32mz2048efm144-i-ph", "item_name": "32-bit MCU with hardware crypto engine", "gold_eccn": "5A992.c", "predicted_eccn": "5A002.a", "category": "5", "verified": true, "reasoning": "The microcontroller integrates a hardware cryptographic engine implementing symmetric algorithms (AES, 3DES) with key lengths exceeding 56 bits, making it an item designed to use cryptography for data confidentiality. Under Category 5 Part 2, 5A002.a controls information security commodities employing such cryptographic functionality; the embedded crypto engine, not the MCU's general processing capability, drives the classification.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 808, "output_tokens": 167}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "microchip-rn4871-v-rm118", "item_name": "Bluetooth Low Energy 4.2 radio module", "gold_eccn": "5A992.c", "predicted_eccn": "5A991.b", "category": "5", "verified": true, "reasoning": "This is a short-range 2.4 GHz Bluetooth Low Energy wireless transceiver/radio module providing standard commercial connectivity. It is a telecommunications transmission/reception apparatus not meeting the higher-performance thresholds of 5A001. Such mass-market frequency-hopping/spread-spectrum radio equipment is classified under Category 5 Part 1 telecommunications, ECCN 5A991 (radio equipment), absent any controlled cryptographic functionality that would place it under 5A002.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 800, "output_tokens": 199}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "rpi-sc0668", "item_name": "Quad-core ARM Cortex-A72 compute module (2 GB / 16 GB)", "gold_eccn": "5A992.c", "predicted_eccn": "4A994", "category": "5", "verified": true, "reasoning": "This is a general-purpose low-performance compute module (quad-core ARM Cortex-A72 at 1.5 GHz) that does not meet the high-performance APP thresholds of 4A003 nor any specialized digital computer controls. It falls under the basket category 4A994 for digital computers and assemblies not controlled elsewhere. The integrated wireless connectivity uses standard commercial Wi-Fi/Bluetooth and does not elevate the classification.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 827, "output_tokens": 176}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "st-stm32f407vgt6", "item_name": "32-bit ARM Cortex-M4 microcontroller, 168 MHz", "gold_eccn": "3A991.a.2", "predicted_eccn": "EAR99", "category": "3", "verified": true, "reasoning": "A general-purpose 32-bit ARM Cortex-M4 microcontroller running at 168 MHz with on-chip flash/SRAM is a commodity-grade embedded controller. It does not meet the performance thresholds or specialized criteria of Category 3 microprocessor/integrated-circuit entries (e.g., 3A001.a.3-.7), which target high-end APP, ADC/DAC, FPGA, RF, or radiation-hardened devices. Such standard MCUs are not described by any CCL entry and are therefore EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 821, "output_tokens": 210}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "thorlabs-bb1-e02", "item_name": "1-inch broadband dielectric mirror, 400-750 nm", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "A standard 1-inch broadband dielectric mirror for the 400-750 nm visible band on fused-silica does not meet the specialized parameters of 6A004 (e.g., scanning/deformable mirrors, or mirrors with specific damage thresholds/flatness/coatings for laser systems). Ordinary visible turning mirrors are not enumerated on the CCL and are classified EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 812, "output_tokens": 160}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "thorlabs-km100", "item_name": "Kinematic mirror mount for 1-inch optics", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "A two-adjuster kinematic mirror mount is a mechanical opto-mechanical alignment fixture providing manual tip/tilt adjustment. It contains no optics, lasers, or controlled materials and does not meet the technical thresholds of Category 6 optics (e.g., 6A004 mirrors/mounts for specialized deformable or beam-steering systems) or any other CCL entry. As a generic passive mechanical positioning component subject to the EAR but not described on the CCL, it is classified EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 826, "output_tokens": 198}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "ti-am3358bzcz100", "item_name": "1 GHz ARM Cortex-A8 applications microprocessor", "gold_eccn": "5A992.c", "predicted_eccn": "EAR99", "category": "5", "verified": true, "reasoning": "A single-core 32-bit ARM Cortex-A8 general-purpose applications microprocessor at 1.0 GHz does not meet the high-performance thresholds (e.g., 3A001.a.1 microprocessor metrics such as APP/SIMD/wordlength criteria) and is a commodity embedded processor not specified elsewhere on the CCL; thus it is subject to the EAR but classified EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 802, "output_tokens": 167}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}], "gpt-4o": [{"id": "adi-ad7768bstz", "item_name": "8-channel 24-bit sigma-delta ADC, 256 kSPS", "gold_eccn": "EAR99", "predicted_eccn": "3A001.a.5.a", "category": "EAR99", "verified": true, "reasoning": "The item is an analog-to-digital converter (ADC) with a resolution of 24 bits and a sampling rate of 256 kSPS. According to the CCL, ECCN 3A001.a.5.a controls ADCs with a resolution of greater than 16 bits and a total conversion rate greater than 200,000 samples per second.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 421, "output_tokens": 93}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-ad9081bbpz-4d4ab", "item_name": "Quad RF-DAC / quad RF-ADC mixed-signal front-end", "gold_eccn": "3A001.a.5.a.3", "predicted_eccn": "3A001.a.5.a", "category": "3", "verified": true, "reasoning": "The item is a mixed-signal front-end with RF-DAC and RF-ADC capabilities, which falls under the category of 'electronic assemblies and components' in Category 3 (Electronics). Specifically, it matches ECCN 3A001.a.5.a, which covers 'digital-to-analog converters' and 'analog-to-digital converters' with a sample rate exceeding 1.2 GSPS, as the described item has DACs at 12 GSPS and ADCs at 4 GSPS.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 439, "output_tokens": 125}, "score": {"exact_match": false, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.7, "level": "eccn"}}, {"id": "adi-ad9162bbcz", "item_name": "6 GSPS RF digital-to-analog converter, to 5 GHz", "gold_eccn": "3A001.a.5.b.2", "predicted_eccn": "3A001.a.5.a", "category": "3", "verified": true, "reasoning": "The item is a high-speed digital-to-analog converter (DAC) with a sampling rate of 6 GSPS and a resolution of 16 bits, which falls under ECCN 3A001.a.5.a. This entry controls converters with a resolution of greater than 8 bits and a sample rate greater than 1.2 GSPS, which matches the technical specifications of the described DAC.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 425, "output_tokens": 101}, "score": {"exact_match": false, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.7, "level": "eccn"}}, {"id": "adi-ad9361bbcz", "item_name": "Wideband 2x2 RF agile transceiver, 47 MHz-6 GHz", "gold_eccn": "5A991.b.1", "predicted_eccn": "5A991.b.5", "category": "5", "verified": true, "reasoning": "The item is a wideband RF transceiver with a frequency range of 47 MHz to 6 GHz, which is used in software-defined radio and wireless infrastructure. According to the CCL, 5A991.b.5 covers 'radio equipment' not controlled by 5A001 that operates in the frequency range of 1.5 MHz to 30 GHz. Since the transceiver does not meet the more stringent criteria of 5A001, it falls under 5A991.b.5.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 446, "output_tokens": 122}, "score": {"exact_match": false, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.7, "level": "eccn"}}, {"id": "adi-adau1452kcpz", "item_name": "300 MHz 32-bit audio digital signal processor", "gold_eccn": "3A991.a.2", "predicted_eccn": "3A001.a.7", "category": "3", "verified": true, "reasoning": "The item is a digital signal processor (DSP) with a clock frequency of 300 MHz. According to the CCL, ECCN 3A001.a.7 controls digital integrated circuits, including DSPs, with a clock frequency exceeding 25 MHz. The description of the item fits this category as it is a 32-bit DSP with a clock frequency of 300 MHz, which is well above the 25 MHz threshold.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 410, "output_tokens": 106}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "adi-adf7021bcpz", "item_name": "Narrow-band sub-1 GHz ISM RF transceiver", "gold_eccn": "EAR99", "predicted_eccn": "5A991.b.5", "category": "EAR99", "verified": true, "reasoning": "The item is a radio frequency transceiver operating in the ISM bands, which are typically used for short-range communication. According to the CCL, ECCN 5A991.b.5 covers 'transceivers' that are not controlled under 5A001 but are still subject to control due to their potential use in telecommunications. The frequency range and modulation types (FSK/GFSK) are consistent with typical consumer and industrial applications, which fall under this classification.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 423, "output_tokens": 115}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-adrv9009bbcz", "item_name": "Integrated dual-channel RF transceiver, 75 MHz-6 GHz", "gold_eccn": "5A991.b.1", "predicted_eccn": "3A001.b.12", "category": "5", "verified": true, "reasoning": "The item is an integrated RF transceiver with a frequency range of 75 MHz to 6 GHz and bandwidth up to 200 MHz, which falls under 3A001.b.12 for radio frequency integrated circuits (RFICs) that are capable of operating in the frequency range of 10 MHz to 31 GHz and have a bandwidth exceeding 100 MHz.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 424, "output_tokens": 93}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-adsp-sc589bbcz-4b", "item_name": "Dual-SHARC + ARM system-on-chip processor", "gold_eccn": "5A992.c", "predicted_eccn": "3A001.a.7", "category": "5", "verified": true, "reasoning": "The item is a system-on-chip processor that includes digital signal processing (DSP) capabilities, specifically with floating-point SHARC DSP cores. According to the CCL, ECCN 3A001.a.7 controls digital integrated circuits designed for digital signal processing with a 'composite theoretical performance' (CTP) exceeding 12.8 weighted TeraFLOPS. The presence of DSP cores and the high-performance nature of the processor suggest it falls under this classification.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 408, "output_tokens": 114}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-maxq1061etp", "item_name": "Cryptographic security controller IC", "gold_eccn": "5A992.c", "predicted_eccn": "5A002.a.1", "category": "5", "verified": true, "reasoning": "The item is a cryptographic security controller IC that provides cryptographic functionality including public-key (ECDSA/ECDH) and symmetric (AES) engines, secure key storage, and a true random number generator. According to the CCL, ECCN 5A002.a.1 covers 'systems, equipment, application specific electronic assemblies, modules and integrated circuits for 'information security', as follows: a. Designed or modified to use 'cryptography' employing digital techniques performing any cryptographic function other than authentication or digital signature and having 'in excess of 56 bits of symmetric key length, or equivalent'.' The described functions and capabilities of the IC fall under this classification.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 408, "output_tokens": 155}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "espressif-esp32-wroom-32e-n4", "item_name": "2.4 GHz Wi-Fi + Bluetooth module, 4 MB flash", "gold_eccn": "5A992.c", "predicted_eccn": "5A992.c", "category": "5", "verified": true, "reasoning": "The item is a wireless communication module operating at 2.4 GHz, which falls under the category of 'Information Security' and 'Telecommunications' equipment. Specifically, it is a mass market product that incorporates wireless communication capabilities (Wi-Fi and Bluetooth), which are typically classified under ECCN 5A992.c when they do not meet the criteria for more stringent controls under 5A002 or 5A991.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 419, "output_tokens": 102}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "lattice-ice40hx4k-tq144", "item_name": "Low-power FPGA, ~3,520 logic cells", "gold_eccn": "EAR99", "predicted_eccn": "3A001.a.7", "category": "EAR99", "verified": true, "reasoning": "The FPGA described has approximately 3,520 logic cells, which falls under the threshold of 5,000 or more equivalent usable gates specified in ECCN 3A001.a.7. This ECCN controls field programmable logic devices with more than 1,000 but less than 5,000 equivalent usable gates, which matches the description provided.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 418, "output_tokens": 90}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-atecc608b-mahda-t", "item_name": "Secure element / crypto authentication IC", "gold_eccn": "5A992.c", "predicted_eccn": "5A002.a.1", "category": "5", "verified": true, "reasoning": "The item is a hardware secure element that provides cryptographic functions including ECDSA/ECDH elliptic-curve cryptography, AES-128, and SHA-256, which are specifically controlled under ECCN 5A002.a.1 for information security systems, equipment, and components designed or modified to use cryptography employing digital techniques performing any cryptographic function other than authentication or digital signature, and having a symmetric algorithm employing a key length in excess of 56 bits.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 412, "output_tokens": 115}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "microchip-dspic33ep512mu810-i-pf", "item_name": "16-bit digital signal controller, 60 MIPS", "gold_eccn": "3A991.a.2", "predicted_eccn": "3A001.a.2.c", "category": "3", "verified": true, "reasoning": "The item is a digital signal processor (DSP) with an integrated DSP engine, which falls under ECCN 3A001.a.2.c for digital signal processors with a processing performance of 60 MIPS. The presence of features like USB OTG, CAN modules, and DMA channels supports its classification as a DSP for embedded signal processing.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 424, "output_tokens": 89}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "microchip-ksz8794cnxic-tr", "item_name": "Four-port managed 10/100 Ethernet switch", "gold_eccn": "EAR99", "predicted_eccn": "5A991.b.4", "category": "EAR99", "verified": true, "reasoning": "The item is a network switch, which falls under the category of telecommunications equipment. According to the CCL, ECCN 5A991.b.4 covers 'network access controllers, communications channel controllers, and packet switches, including routers and bridges, for digital communications.' The described Ethernet switch fits this description as it is a managed switch used in networking applications.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 415, "output_tokens": 91}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-lan8720a-cp-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "gold_eccn": "EAR99", "predicted_eccn": "5A991.b.4", "category": "EAR99", "verified": true, "reasoning": "The item is a 10/100 Ethernet PHY transceiver, which falls under the category of telecommunications equipment. According to the CCL, ECCN 5A991.b.4 covers 'Telecommunications equipment, not controlled by 5A001, specially designed to be used for data communications, as follows: b.4. Ethernet transceivers.' This classification is appropriate as the item is a low-power Ethernet PHY transceiver compliant with IEEE 802.3, supporting data communication functions.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 425, "output_tokens": 119}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-lan8742a-cz-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "gold_eccn": "EAR99", "predicted_eccn": "5A991.b.4", "category": "EAR99", "verified": true, "reasoning": "The item is a 10/100 Ethernet PHY transceiver, which falls under the category of telecommunications equipment. According to the CCL, ECCN 5A991.b.4 covers 'Telecommunications equipment, not controlled by 5A001, specially designed for the transport or switching of digital or analog signals.' Since the transceiver is not controlled under 5A001 and is used for networking, it fits under 5A991.b.4.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 402, "output_tokens": 112}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-pic32mz2048efm144-i-ph", "item_name": "32-bit MCU with hardware crypto engine", "gold_eccn": "5A992.c", "predicted_eccn": "5A002.a.1", "category": "5", "verified": true, "reasoning": "The microcontroller includes an integrated hardware cryptographic engine capable of performing AES and 3DES encryption, which falls under ECCN 5A002.a.1 for 'Information Security' items. This classification is due to the presence of cryptographic functionality that exceeds the threshold for mass market eligibility, thus requiring control under 5A002.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 419, "output_tokens": 87}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "microchip-rn4871-v-rm118", "item_name": "Bluetooth Low Energy 4.2 radio module", "gold_eccn": "5A992.c", "predicted_eccn": "5A991.b.2", "category": "5", "verified": true, "reasoning": "The Bluetooth Low Energy 4.2 radio module is a wireless communication device operating in the 2.4 GHz band. According to the CCL, ECCN 5A991.b.2 covers 'telecommunications equipment, not controlled by 5A001, specially designed to operate in the 2.4 GHz band.' Since Bluetooth technology is not specifically controlled under 5A001, it falls under 5A991.b.2.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 413, "output_tokens": 110}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "rpi-sc0668", "item_name": "Quad-core ARM Cortex-A72 compute module (2 GB / 16 GB)", "gold_eccn": "5A992.c", "predicted_eccn": "EAR99", "category": "5", "verified": true, "reasoning": "The described compute module is a general-purpose computing device based on a standard ARM Cortex-A72 processor. It does not meet the specific performance thresholds or specialized functions that would place it under a specific ECCN in Category 3 (Electronics) of the CCL. Therefore, it is classified as EAR99, indicating it is subject to the EAR but not listed on the CCL.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 430, "output_tokens": 93}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "st-stm32f407vgt6", "item_name": "32-bit ARM Cortex-M4 microcontroller, 168 MHz", "gold_eccn": "3A991.a.2", "predicted_eccn": "3A991.a.2", "category": "3", "verified": true, "reasoning": "The microcontroller is a general-purpose microcontroller with a clock speed of 168 MHz, which does not meet the performance thresholds for control under 3A001.a.3 (600 MTOPS or more). Therefore, it falls under 3A991.a.2, which covers microprocessors and microcontrollers not controlled by 3A001.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 426, "output_tokens": 89}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "thorlabs-bb1-e02", "item_name": "1-inch broadband dielectric mirror, 400-750 nm", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "The item is a dielectric mirror used for visible-wavelength beam steering, which does not fall under any specific ECCN in Category 6 (Lasers and Sensors) or Category 3 (Electronics) as it does not meet the technical parameters for controlled optical components. It is therefore classified as EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 424, "output_tokens": 78}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "thorlabs-km100", "item_name": "Kinematic mirror mount for 1-inch optics", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "The kinematic mirror mount is a mechanical device used for aligning optics and does not fall under any specific ECCN on the Commerce Control List. It does not have any controlled electronic, optical, or mechanical properties that would place it under a specific ECCN, thus it is classified as EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 430, "output_tokens": 75}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "ti-am3358bzcz100", "item_name": "1 GHz ARM Cortex-A8 applications microprocessor", "gold_eccn": "5A992.c", "predicted_eccn": "3A991.a.1", "category": "5", "verified": true, "reasoning": "The ARM Cortex-A8 microprocessor is a general-purpose microprocessor with a clock speed of 1.0 GHz. According to the CCL, microprocessors with a clock speed of 1.2 GHz or less fall under ECCN 3A991.a.1, which covers general-purpose microprocessors not controlled under 3A001.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 412, "output_tokens": 89}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}], "qwen3-32b": [{"id": "adi-ad7768bstz", "item_name": "8-channel 24-bit sigma-delta ADC, 256 kSPS", "gold_eccn": "EAR99", "predicted_eccn": "8A002.b.2", "category": "EAR99", "verified": true, "reasoning": "The 8-channel 24-bit sigma-delta ADC with 256 kSPS per channel meets the criteria for 8A002.b.2, which controls analog-to-digital converters (ADCs) with 16-bit or greater resolution and sampling rates of 100 kSPS or more. The device’s technical parameters (24-bit resolution and 256 kSPS) exceed the control thresholds specified in this ECCN.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 305, "output_tokens": 557}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-ad9081bbpz-4d4ab", "item_name": "Quad RF-DAC / quad RF-ADC mixed-signal front-end", "gold_eccn": "3A001.a.5.a.3", "predicted_eccn": "3A001.a.1", "category": "3", "verified": true, "reasoning": "The item is a mixed-signal front-end integrating RF DACs and ADCs with sampling rates exceeding 250 MSPS (12 GSPS and 4 GSPS, respectively), which fall under the control of 3A001.a.1 per CCL technical note 3802.1.b.1. The JESD204B/C interface and digital up/down conversion are integrated features but do not alter the primary classification based on the ADC/DAC sampling rate thresholds.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 326, "output_tokens": 760}, "score": {"exact_match": false, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.7, "level": "eccn"}}, {"id": "adi-ad9162bbcz", "item_name": "6 GSPS RF digital-to-analog converter, to 5 GHz", "gold_eccn": "3A001.a.5.b.2", "predicted_eccn": "3A002.b.3", "category": "3", "verified": true, "reasoning": "The item is a high-speed 16-bit RF DAC with a 6 GSPS update rate and 5 GHz output frequency. 3A002.b.3 covers digital-to-analog converters with sampling rates ≥4 GSPS and resolution >12 bits, which matches the 6 GSPS and 16-bit specifications. The 5 GHz RF capability aligns with the 'RF' designation in the ECCN. The JESD204B interface and integrated signal processing features are consistent with the 'wideband transmit applications' description in the ECCN.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 309, "output_tokens": 671}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "adi-ad9361bbcz", "item_name": "Wideband 2x2 RF agile transceiver, 47 MHz-6 GHz", "gold_eccn": "5A991.b.1", "predicted_eccn": "3A001.d.1", "category": "5", "verified": true, "reasoning": "The item is a wideband RF transceiver with tunable frequencies from 47 MHz to 6 GHz and channel bandwidths up to 56 MHz. 3A001.d.1 controls RF transceivers with tunable frequencies above 30 MHz and tunable to at least 1 GHz, which matches the technical specifications of the device. The 2x2 MIMO capability is not explicitly addressed in the CCL, but the primary classification is determined by the RF transceiver functionality.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 329, "output_tokens": 553}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-adau1452kcpz", "item_name": "300 MHz 32-bit audio digital signal processor", "gold_eccn": "3A991.a.2", "predicted_eccn": "3A001.c.1.b", "category": "3", "verified": true, "reasoning": "The item is a 32-bit digital signal processor (DSP) operating at 300 MHz, which falls under 3A001.c.1.b (DSPs with clock frequencies ≥200 MHz and <500 MHz). The audio-specific functions (mixing, filtering, equalization) do not alter its classification, as the CCL controls DSPs based on clock speed and bit width. The integrated PLL and multichannel I/O are consistent with DSP capabilities described in the CCL.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 294, "output_tokens": 718}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "adi-adf7021bcpz", "item_name": "Narrow-band sub-1 GHz ISM RF transceiver", "gold_eccn": "EAR99", "predicted_eccn": "EAR99", "category": "EAR99", "verified": true, "reasoning": "The item is a low-power narrow-band sub-1 GHz ISM RF transceiver using FSK/GFSK modulation. The CCL entries (e.g., 3A001.b.3) require either an RF output power >500 mW, frequency >40 GHz, or power between 50-500 mW with frequency >1 GHz. Since the item operates below 1 GHz and is described as 'low-power', it does not meet the technical criteria for control under any CCL entry. Thus, it is classified under EAR99.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 309, "output_tokens": 1866}, "score": {"exact_match": true, "eccn_match": true, "group_match": true, "category_match": true, "ear99_correct": true, "parsed": true, "grade": 1.0, "level": "exact"}}, {"id": "adi-adrv9009bbcz", "item_name": "Integrated dual-channel RF transceiver, 75 MHz-6 GHz", "gold_eccn": "5A991.b.1", "predicted_eccn": "3A001.a.1.a", "category": "5", "verified": true, "reasoning": "The item is a dual-channel RF transceiver operating in the 75 MHz-6 GHz range with up to 200 MHz bandwidth, multiple transmit/receive channels, and on-chip digital filtering. These characteristics align with 3A001.a.1.a, which covers radio communication equipment with multiple channels, software-defined capabilities, and specified frequency/bandwidth ranges. The observation-receive channel and synthesizer integration further support classification under this ECCN.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 306, "output_tokens": 533}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-adsp-sc589bbcz-4b", "item_name": "Dual-SHARC + ARM system-on-chip processor", "gold_eccn": "5A992.c", "predicted_eccn": "3A001.a.1", "category": "5", "verified": true, "reasoning": "The item is a system-on-chip processor combining a general-purpose ARM Cortex-A5 core with two SHARC DSP cores. 3A001.a.1 applies to microprocessors containing a general-purpose core and at least one other core (e.g., a digital signal processor core), which matches this heterogeneous multi-core architecture. The CCL does not specify more granular parameters for the number of cores or connectivity features in this context.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 286, "output_tokens": 486}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "adi-maxq1061etp", "item_name": "Cryptographic security controller IC", "gold_eccn": "5A992.c", "predicted_eccn": "5A002.b", "category": "5", "verified": true, "reasoning": "The item is a dedicated hardware cryptographic controller providing TLS/secure-boot acceleration, public-key (ECDSA/ECDH) and symmetric (AES) cryptographic engines, secure key storage, and a true random number generator. These capabilities align with 5A002.b, which controls cryptographic accelerators and hardware security modules that perform cryptographic key generation, key exchange, digital signatures, and secure boot functions. The secure key storage and random number generator further support classification under information security controls rather than general-purpose electronics.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 284, "output_tokens": 634}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "espressif-esp32-wroom-32e-n4", "item_name": "2.4 GHz Wi-Fi + Bluetooth module, 4 MB flash", "gold_eccn": "5A992.c", "predicted_eccn": "3A001", "category": "5", "verified": true, "reasoning": "The item is a 2.4 GHz Wi-Fi and Bluetooth radio-frequency transceiver module, which falls under Category 3 (Communications) and ECCN 3A001 for transmitters and receivers operating at frequencies up to 40 GHz. The integrated wireless communication functionality and RF transceiver design align with the technical scope of 3A001, which covers such modules for general communication purposes.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 299, "output_tokens": 460}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "lattice-ice40hx4k-tq144", "item_name": "Low-power FPGA, ~3,520 logic cells", "gold_eccn": "EAR99", "predicted_eccn": "3A001.a.1.b", "category": "EAR99", "verified": true, "reasoning": "The item is a field-programmable gate array (FPGA) with 3,520 logic cells, which falls within the 1,000–9,999 logic cell threshold specified in 3A001.a.1.b. The CCL explicitly controls FPGAs with 1,000–9,999 logic cells for their use in hardware acceleration and interface bridging, which aligns with the described functionality.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 305, "output_tokens": 514}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-atecc608b-mahda-t", "item_name": "Secure element / crypto authentication IC", "gold_eccn": "5A992.c", "predicted_eccn": "3A001.a.1.a", "category": "5", "verified": true, "reasoning": "The item is a cryptographic IC performing ECDSA/ECDH (public-key cryptography), AES-128 encryption, SHA-256 hashing, and secure key storage, which falls under 3A001.a.1.a for ICs with cryptographic functions including public-key algorithms. The I2C interface and secure boot/authentication use case reinforce its classification as a cryptographic security component.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 292, "output_tokens": 530}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-dspic33ep512mu810-i-pf", "item_name": "16-bit digital signal controller, 60 MIPS", "gold_eccn": "3A991.a.2", "predicted_eccn": "3A001.a.1.b", "category": "3", "verified": true, "reasoning": "The item is a 16-bit digital signal controller with an integrated DSP engine. According to 3A001.a.1.b, microprocessors with integrated components such as a DSP engine are controlled regardless of processing speed (60 MIPS here is below 2000 MIPS threshold but the presence of a DSP alone triggers control).", "parsed_ok": true, "error": null, "usage": {"input_tokens": 310, "output_tokens": 2023}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "microchip-ksz8794cnxic-tr", "item_name": "Four-port managed 10/100 Ethernet switch", "gold_eccn": "EAR99", "predicted_eccn": "3A001.a.1.a", "category": "EAR99", "verified": true, "reasoning": "The item is a Layer-2 managed 10/100 Ethernet switch with a maximum transmission rate of 100 Mbps, which falls under 3A001.a.1.a (switching systems for digital communication with speeds ≤100 Mbps). The integrated PHYs, MII/RMII/RGMII interfaces, and industrial/embedded application context align with this classification. The managed functionality and package type do not override the primary transmission rate-based categorization.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 300, "output_tokens": 726}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-lan8720a-cp-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "gold_eccn": "EAR99", "predicted_eccn": "3A001.a.1.a", "category": "EAR99", "verified": true, "reasoning": "The item is a physical-layer (PHY) transceiver for Ethernet data communication, compliant with IEEE 802.3 standards. It functions as digital transmission equipment for data communications, which falls under 3A001.a.1.a. The RMII interface and features like Auto-Negotiation and Auto-MDIX do not alter its classification under the transmission equipment category.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 311, "output_tokens": 544}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-lan8742a-cz-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "gold_eccn": "EAR99", "predicted_eccn": "3A001.b.1", "category": "EAR99", "verified": true, "reasoning": "The item is a single-port Ethernet physical-layer transceiver operating at 10/100 Mbps with an RMII interface, which falls under 3A001.b.1 as it is a network interface unit/LAN adapter with data rates ≤ 155 Mbps. Integrated cable diagnostics and low-power modes do not alter the classification, as 3A001.b.1 encompasses such functionality in telecommunications equipment.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 286, "output_tokens": 654}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-pic32mz2048efm144-i-ph", "item_name": "32-bit MCU with hardware crypto engine", "gold_eccn": "5A992.c", "predicted_eccn": "3A001.a.1.a", "category": "5", "verified": true, "reasoning": "The item is a 32-bit microcontroller (MCU) with integrated hardware cryptographic capabilities (AES/3DES/SHA/RNG) and communication interfaces. According to 3A001, microcontrollers with hardware cryptographic accelerators are classified under this ECCN when the cryptographic functions are ancillary to the MCU's primary processing functions. The presence of 2048 KB flash, 512 KB RAM, and multiple I/O interfaces aligns with the 'high-performance' MCU scope in 3A001.a.1.a. Since the cryptographic engine is an integrated feature rather than a standalone cryptographic module, 5A002 does not apply.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 303, "output_tokens": 783}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "microchip-rn4871-v-rm118", "item_name": "Bluetooth Low Energy 4.2 radio module", "gold_eccn": "5A992.c", "predicted_eccn": "3A001.b.1.a", "category": "5", "verified": true, "reasoning": "The Bluetooth Low Energy 4.2 radio module is a 2.4 GHz wireless transceiver subsystem (as specified in 3A001.b.1.a). It functions as a complete radio transceiver with integrated antenna and is shielded, meeting the criteria for controlled telecommunications equipment. The ASCII command interface and package dimensions do not alter its classification under the CCL.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 292, "output_tokens": 568}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "rpi-sc0668", "item_name": "Quad-core ARM Cortex-A72 compute module (2 GB / 16 GB)", "gold_eccn": "5A992.c", "predicted_eccn": "4A001.a.1.a.1", "category": "5", "verified": true, "reasoning": "The item is a microprocessor-based computer (system-on-module) with a quad-core ARM Cortex-A72 processor (64-bit architecture), 2 GB RAM, 16 GB storage, and multiple connectivity interfaces. It meets the definition of 4A001.a.1.a.1, which covers microprocessor-based computers with specified technical parameters. The module is a complete computing system, not a semiconductor chip alone, and is intended for general-purpose computing functions.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 314, "output_tokens": 986}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "st-stm32f407vgt6", "item_name": "32-bit ARM Cortex-M4 microcontroller, 168 MHz", "gold_eccn": "3A991.a.2", "predicted_eccn": "3A001.a.1.a", "category": "3", "verified": true, "reasoning": "The item is a 32-bit microcontroller with a floating-point unit (FPU), meeting the technical criteria for 3A001.a.1.a (microprocessors/microcontroller units with 32-bit or greater data width and an FPU). The clock speed (168 MHz), memory capacities (1 MB flash, 192 KB SRAM), and package type (100-pin LQFP) are consistent with general-purpose embedded applications, and no features exceed the scope of 3A001.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 315, "output_tokens": 492}, "score": {"exact_match": false, "eccn_match": false, "group_match": true, "category_match": true, "ear99_correct": false, "parsed": true, "grade": 0.4, "level": "group"}}, {"id": "thorlabs-bb1-e02", "item_name": "1-inch broadband dielectric mirror, 400-750 nm", "gold_eccn": "EAR99", "predicted_eccn": "9A001.a.1.b", "category": "EAR99", "verified": true, "reasoning": "The item is a broadband dielectric mirror optimized for visible wavelengths (400-750 nm) and used in free-space beam steering. This falls under 9A001.a.1.b, which covers optical components for wavelengths 200 nm to 1.55 µm with applications in beam steering and optical systems. The multilayer dielectric coating and fused-silica substrate align with the technical scope of this ECCN.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 315, "output_tokens": 840}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "thorlabs-km100", "item_name": "Kinematic mirror mount for 1-inch optics", "gold_eccn": "EAR99", "predicted_eccn": "3A001.a.1", "category": "EAR99", "verified": true, "reasoning": "The kinematic mirror mount is classified under 3A001.a.1 (precision measuring instruments) because it uses micrometer-style screws for fine tip/tilt angular adjustments, enabling precise alignment of optics. This aligns with the CCL's definition of precision measuring instruments requiring high-accuracy adjustments, even though its primary function is mechanical positioning rather than direct measurement.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 308, "output_tokens": 1310}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}, {"id": "ti-am3358bzcz100", "item_name": "1 GHz ARM Cortex-A8 applications microprocessor", "gold_eccn": "5A992.c", "predicted_eccn": "3A001.a.1.a", "category": "5", "verified": true, "reasoning": "The item is a single-core 32-bit ARM Cortex-A8 microprocessor operating at 1.0 GHz (exceeding 500 MHz but not exceeding 1 GHz). According to 3A001.a.1.a, microprocessors with clock speeds in this range are controlled. Integrated graphics and industrial communications support are covered under the 'microprocessor' definition in 3A001, which includes processors with additional functionalities like graphics or communication interfaces.", "parsed_ok": true, "error": null, "usage": {"input_tokens": 293, "output_tokens": 1097}, "score": {"exact_match": false, "eccn_match": false, "group_match": false, "category_match": false, "ear99_correct": false, "parsed": true, "grade": 0.0, "level": "none"}}]}, "generated": "2026-06-24", "grade_weights": {"exact": 1.0, "eccn": 0.7, "group": 0.4, "category": 0.2, "none": 0.0}}</script>
+<section id="explorer"><div class="wrap">
+  <div class="sec-head">
+    <div>
+      <div class="kicker">04 · The whole dataset</div>
+      <h2>Every item, every model</h2>
+      <p>Gold label vs. each model's answer. Click a row to see how the agentic Claude navigated the
+        CCL — the actual sequence of tool calls it made before answering.</p>
+    </div>
+  </div>
+  <div class="controls">
+    <select id="fCat"></select>
+    <select id="fVer">
+      <option value="all">All items</option>
+      <option value="ver">Verified only</option>
+      <option value="unver">New / unverified</option>
+    </select>
+    <input id="fSearch" type="search" placeholder="filter by name or ECCN…" style="flex:1;min-width:160px">
+  </div>
+  <div style="overflow-x:auto">
+    <table class="qtable"><thead><tr>
+      <th>Item</th><th>Gold</th><th id="thA"></th><th id="thB"></th><th id="thC"></th>
+      <th>Claude + tools</th>
+    </tr></thead><tbody id="qbody"></tbody></table>
+  </div>
+</div></section>
+
+<section id="method"><div class="wrap">
+  <div class="sec-head"><div>
+    <div class="kicker">05 · How to read this</div>
+    <h2>Method &amp; caveats</h2>
+  </div></div>
+  <div class="method">
+    <div class="mcard"><h3>Graded scoring</h3><p>Getting the category and product group right is
+      materially more useful than a random guess, so scoring is graded rather than all-or-nothing.
+      Each prediction earns the deepest tier it reaches.</p>
+      <div class="gw">exact 1.0 · ECCN head 0.7 · cat+group 0.4 · category 0.2 · miss 0</div></div>
+    <div class="mcard"><h3>The agentic tools are the unmodified CCL</h3><p>The four tools expose the
+      full Commerce Control List parsed from the eCFR (637 entries, all categories) — no filtering
+      to this dataset's answers, no class up-weighted in search, and a system prompt that teaches
+      only the general order of review with no specific ECCN numbers. The lift comes from reading
+      the list.</p></div>
+    <div class="mcard"><h3>Verified vs. new</h3><p>23 items are human-verified self-classifications;
+      11 are newer candidates awaiting sign-off, spanning categories added after the tools existed.
+      The tool lift is nearly identical on both slices — evidence it generalizes rather than overfits.</p></div>
+    <div class="mcard"><h3>Headline convention</h3><p>Accuracy is over all items; an API error or an
+      unparseable answer counts as wrong, so a model that fails on its hardest items can't shrink its
+      own denominator. Cross-model numbers are not equalized for reasoning/temperature.</p></div>
+  </div>
+  <div class="callout" id="trapNote"></div>
+</div></section>
+
+<footer><div class="wrap">
+  CommodityBench · IAPS-AI/commoditybench · generated <span id="gen"></span> ·
+  data embedded for offline viewing · <a href="https://www.ecfr.gov/current/title-15/part-774">15 CFR 774 Supp. No. 1</a>
+</div></footer>
+
 <script>
-const DATA = JSON.parse(document.getElementById("data").textContent);
-const R = DATA.report;
-const LEVELS = ["exact","eccn","group","category","none"];
-const LVL_NAME = {exact:"Exact ECCN",eccn:"ECCN head",group:"Category + group",category:"Category only",none:"Miss"};
-const pct = x => (x*100).toFixed(1)+"%";
-let current = R.models[0].model;
+const DATA = {"generated": "2026-06-24", "dataset": {"total": 34, "verified": 23, "unverified": 11, "by_category": {"EAR99": 8, "3": 5, "5": 10, "7": 4, "1": 3, "2": 2, "9": 2}, "category_names": {"0": "Nuclear", "1": "Materials & Chemicals", "2": "Materials Processing", "3": "Electronics", "4": "Computers", "5": "Telecom & Info-Security", "6": "Sensors & Lasers", "7": "Navigation & Avionics", "8": "Marine", "9": "Aerospace & Propulsion", "EAR99": "EAR99 (not listed)"}}, "crossmodel": [{"model": "claude-opus-4-8", "name": "Claude Opus 4.8", "vendor": "Anthropic", "mode": "adaptive thinking", "weight": "frontier", "split": {"all": {"n": 34, "errors": 0, "exact": 0.2647, "eccn": 0.3529, "group": 0.5588, "category": 0.5588, "parse": 1.0, "grade": 0.4088, "ladder": {"exact": 9, "eccn": 3, "group": 7, "category": 0, "none": 15, "error": 0}}, "verified": {"n": 23, "errors": 0, "exact": 0.2609, "eccn": 0.3478, "group": 0.5652, "category": 0.5652, "parse": 1.0, "grade": 0.4087, "ladder": {"exact": 6, "eccn": 2, "group": 5, "category": 0, "none": 10, "error": 0}}, "unverified": {"n": 11, "errors": 0, "exact": 0.2727, "eccn": 0.3636, "group": 0.5455, "category": 0.5455, "parse": 1.0, "grade": 0.4091, "ladder": {"exact": 3, "eccn": 1, "group": 2, "category": 0, "none": 5, "error": 0}}}}, {"model": "gpt-4o", "name": "GPT-4o", "vendor": "OpenAI", "mode": "temp 0", "weight": "frontier", "split": {"all": {"n": 34, "errors": 0, "exact": 0.1765, "eccn": 0.3235, "group": 0.5882, "category": 0.6176, "parse": 1.0, "grade": 0.3912, "ladder": {"exact": 6, "eccn": 5, "group": 9, "category": 1, "none": 13, "error": 0}}, "verified": {"n": 23, "errors": 0, "exact": 0.1739, "eccn": 0.3043, "group": 0.5652, "category": 0.5652, "parse": 1.0, "grade": 0.3696, "ladder": {"exact": 4, "eccn": 3, "group": 6, "category": 0, "none": 10, "error": 0}}, "unverified": {"n": 11, "errors": 0, "exact": 0.1818, "eccn": 0.3636, "group": 0.6364, "category": 0.7273, "parse": 1.0, "grade": 0.4364, "ladder": {"exact": 2, "eccn": 2, "group": 3, "category": 1, "none": 3, "error": 0}}}}, {"model": "qwen3-32b", "name": "Qwen3-32B", "vendor": "Alibaba (open weights)", "mode": "thinking, RunPod", "weight": "open", "split": {"all": {"n": 34, "errors": 0, "exact": 0.0, "eccn": 0.0588, "group": 0.2059, "category": 0.2059, "parse": 0.9706, "grade": 0.1, "ladder": {"exact": 0, "eccn": 2, "group": 5, "category": 0, "none": 27, "error": 0}}, "verified": {"n": 23, "errors": 0, "exact": 0.0, "eccn": 0.087, "group": 0.3043, "category": 0.3043, "parse": 0.9565, "grade": 0.1478, "ladder": {"exact": 0, "eccn": 2, "group": 5, "category": 0, "none": 16, "error": 0}}, "unverified": {"n": 11, "errors": 0, "exact": 0.0, "eccn": 0.0, "group": 0.0, "category": 0.0, "parse": 1.0, "grade": 0.0, "ladder": {"exact": 0, "eccn": 0, "group": 0, "category": 0, "none": 11, "error": 0}}}}], "agentic_model_key": "claude-opus-4-8::agentic", "model_keys": ["claude-opus-4-8", "gpt-4o", "qwen3-32b"], "model_meta": {"claude-opus-4-8": {"name": "Claude Opus 4.8", "vendor": "Anthropic", "mode": "adaptive thinking", "weight": "frontier"}, "gpt-4o": {"name": "GPT-4o", "vendor": "OpenAI", "mode": "temp 0", "weight": "frontier"}, "qwen3-32b": {"name": "Qwen3-32B", "vendor": "Alibaba (open weights)", "mode": "thinking, RunPod", "weight": "open"}}, "toollift": {"model": "Claude Opus 4.8", "baseline": {"all": {"n": 34, "errors": 0, "exact": 0.2647, "eccn": 0.3529, "group": 0.5588, "category": 0.5588, "parse": 1.0, "grade": 0.4088, "ladder": {"exact": 9, "eccn": 3, "group": 7, "category": 0, "none": 15, "error": 0}}, "verified": {"n": 23, "errors": 0, "exact": 0.2609, "eccn": 0.3478, "group": 0.5652, "category": 0.5652, "parse": 1.0, "grade": 0.4087, "ladder": {"exact": 6, "eccn": 2, "group": 5, "category": 0, "none": 10, "error": 0}}, "unverified": {"n": 11, "errors": 0, "exact": 0.2727, "eccn": 0.3636, "group": 0.5455, "category": 0.5455, "parse": 1.0, "grade": 0.4091, "ladder": {"exact": 3, "eccn": 1, "group": 2, "category": 0, "none": 5, "error": 0}}}, "agentic": {"all": {"n": 34, "errors": 0, "exact": 0.5588, "eccn": 0.6176, "group": 0.7059, "category": 0.7353, "parse": 1.0, "grade": 0.6412, "ladder": {"exact": 19, "eccn": 2, "group": 3, "category": 1, "none": 9, "error": 0}}, "verified": {"n": 23, "errors": 0, "exact": 0.5652, "eccn": 0.6087, "group": 0.7391, "category": 0.7391, "parse": 1.0, "grade": 0.6478, "ladder": {"exact": 13, "eccn": 1, "group": 3, "category": 0, "none": 6, "error": 0}}, "unverified": {"n": 11, "errors": 0, "exact": 0.5455, "eccn": 0.6364, "group": 0.6364, "category": 0.7273, "parse": 1.0, "grade": 0.6273, "ladder": {"exact": 6, "eccn": 1, "group": 0, "category": 1, "none": 3, "error": 0}}}, "per_category": [{"cat": "1", "name": "Materials & Chemicals", "n": 3, "base_grade": 0.133, "ag_grade": 0.3}, {"cat": "2", "name": "Materials Processing", "n": 2, "base_grade": 0.0, "ag_grade": 0.5}, {"cat": "3", "name": "Electronics", "n": 5, "base_grade": 0.28, "ag_grade": 0.94}, {"cat": "5", "name": "Telecom & Info-Security", "n": 10, "base_grade": 0.3, "ag_grade": 0.52}, {"cat": "7", "name": "Navigation & Avionics", "n": 4, "base_grade": 0.775, "ag_grade": 1.0}, {"cat": "9", "name": "Aerospace & Propulsion", "n": 2, "base_grade": 0.5, "ag_grade": 0.5}, {"cat": "EAR99", "name": "EAR99 (not listed)", "n": 8, "base_grade": 0.625, "ag_grade": 0.625}], "mean_tool_calls": 4.9}, "questions": [{"id": "lnd-202-bf3", "item_name": "Boron-trifluoride thermal neutron proportional counter", "category": "1", "gold": "1A999", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "1A004.c", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "1A999.a", "grade": 0.7, "level": "eccn", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "BF3 boron trifluoride thermal neutron proportional counter detector"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "0"}}, {"tool": "search_ccl", "input": {"query": "neutron detection equipment measuring neutron flux radiation detector instrument"}}, {"tool": "read_eccn", "input": {"eccn": "6A102"}}, {"tool": "read_eccn", "input": {"eccn": "1A004"}}, {"tool": "read_eccn", "input": {"eccn": "1A995"}}, {"tool": "search_ccl", "input": {"query": "proportional counter tube thermal neutron flux monitoring reactor instrumentation BF3"}}, {"tool": "read_eccn", "input": {"eccn": "2A291"}}, {"tool": "read_eccn", "input": {"eccn": "1A999"}}], "reasoning": "The item is a general-purpose BF3 thermal-neutron proportional counter — a radiation detection/measurement device. It is not a radiation-hardened missile detector (6A102), nor specially designed to detect weaponized radioactive/CB agents (1A004). Under 2A291.e (radiation detectors for special nuclear material or reactors), Technical Note 2 expressly directs general-purpose radiation detection equipment to ECCN 1A999, and Technical Note 1 excludes only reactor-specially-designed neutron flux detectors (NRC jurisdiction). This standalone general-purpose neutron counter therefore falls under 1A99"}}}, {"id": "lnd-2311-b10", "item_name": "Boron-10 lined thermal neutron proportional counter", "category": "1", "gold": "1A999", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "1A227", "grade": 0.4, "level": "group", "error": false}, "gpt-4o": {"eccn": "1A999.a", "grade": 0.7, "level": "eccn", "error": false}, "qwen3-32b": {"eccn": "7A001.a.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "1C225", "grade": 0.2, "level": "category", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "boron-lined proportional counter thermal neutron detector"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "0"}}, {"tool": "read_eccn", "input": {"eccn": "1C225"}}, {"tool": "search_ccl", "input": {"query": "neutron detection equipment monitoring proportional counter nuclear"}}], "reasoning": "The counter's active element is a coating of boron enriched to 96% in boron-10, well above the natural ~18.5 wt% abundance. ECCN 1C225 controls \"boron enriched in the boron-10 isotope to greater than its natural isotopic abundance... elemental boron, compounds, mixtures containing boron, manufactures thereof,\" with no minimum quantity. The B-10-lined proportional counter tube is a manufactured article incorporating enriched boron-10 and is thus controlled under 1C225 (NP, AT). No more specific neutron-detector ECCN applies, and the presence of enriched B-10 precludes EAR99."}}}, {"id": "lnd-2517-he3", "item_name": "Helium-3 thermal neutron detector tube", "category": "1", "gold": "1C232", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "1A004.c", "grade": 0.2, "level": "category", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "Helium-3 thermal neutron detector proportional counter tube"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "read_eccn", "input": {"eccn": "1C232"}}, {"tool": "search_ccl", "input": {"query": "neutron detector measurement nuclear radiation detection equipment"}}, {"tool": "get_category_outline", "input": {"category": "0"}}, {"tool": "read_eccn", "input": {"eccn": "1A004"}}], "reasoning": "The item is a He-3 thermal-neutron proportional counter. The only on-point CCL entry is 1C232 (devices containing helium-3), but its ECCN Controls note states it \"does not control a product or device containing less than 1 g of helium-3.\" Using PV=nRT for the stated fill (4560 torr = 6.0 atm, 3.91 cm^3, 294 K) yields ~9.7e-4 mol = ~2.9 mg of He-3, far below the 1 g threshold, so 1C232 does not apply. No other entry fits: 1A004.c covers NBC detection systems for weaponized 'radioactive materials' (not a general neutron counting tube), and 1C236/3A231/2A291 cover neutron sources, neutron generat"}}}, {"id": "nachi-7002cydup4", "item_name": "Super-precision angular contact ball bearing, 15 mm bore (P4/ABEC-7)", "category": "2", "gold": "EAR99", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "2A001.a", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "2A001.b.2.a", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.b", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "precision angular contact ball bearing tolerance class machine tool spindle"}}, {"tool": "get_category_outline", "input": {"category": "2"}}, {"tool": "read_eccn", "input": {"eccn": "2A001"}}, {"tool": "read_eccn", "input": {"eccn": "2A991"}}], "reasoning": "A P4/ABEC-7 steel angular-contact ball bearing. 2A001.a controls only bearings with rings/rolling elements of monel or beryllium (this is steel); the 2A001 MT control covers ISO Class 2/ABEC-9 radial ball bearings, but this is ABEC-7 (ISO Class 4), below that threshold. The 2A991 catch-all (a) requires ABEC-7/ISO Class 4 tolerance PLUS either high-temperature (>573 K) construction or design to operate above 2.3 million DN; this bearing's max DN = 15 mm × 68,000 rpm ≈ 1.02 million DN and uses an ordinary polyamide cage, so it meets neither added criterion. No other bearing/basket entry applies,"}}}, {"id": "oberdorfer-obn9000rs3", "item_name": "Bronze rotary gear pump, 23 GPM", "category": "2", "gold": "2B999.j", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "8A001.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "rotary gear pump positive displacement bronze lubricating fluid transfer"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "2"}}, {"tool": "read_eccn", "input": {"eccn": "2B350"}}], "reasoning": "A bronze positive-displacement rotary gear pump (23 GPM, 150 PSI) for transferring clean lubricating fluids in industrial/marine service. It is not an electromagnetic molten-metal pump (2A993) or a vacuum pump (2B231/2B233). The only specific pump control for materials, 2B350.i, applies to chemical-process pumps whose wetted surfaces are made of listed corrosion-resistant materials (>25%Ni/20%Cr alloys, >40%Ni, fluoropolymers, glass, tantalum, titanium, zirconium, niobium, ceramics). This pump's wetted parts are bronze with a stainless shaft, carbon bearings and Viton seal — none of which are "}}}, {"id": "adi-ad9081bbpz-4d4ab", "item_name": "Quad RF-DAC / quad RF-ADC mixed-signal front-end", "category": "3", "gold": "3A001.a.5.a.3", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "3A001.a.5.a", "grade": 0.7, "level": "eccn", "error": false}, "gpt-4o": {"eccn": "3A001.a.5.a", "grade": 0.7, "level": "eccn", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.7, "level": "eccn", "error": false}, "claude-opus-4-8::agentic": {"eccn": "3A001.a.5.b.2", "grade": 0.7, "level": "eccn", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "RF analog-to-digital converter ADC digital-to-analog converter DAC GSPS sample rate mixed-signal"}}, {"tool": "get_category_outline", "input": {"category": "3"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.a.5"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.a.5.b"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.a.5.b.2"}}], "reasoning": "The item is a monolithic mixed-signal integrated circuit integrating DAC and ADC channels — an \"ADC and DAC integrated circuit\" expressly enumerated under 3A001.a.5. Its four DAC channels operate at 12 GSPS with RF-DAC (≥12-bit) resolution, far exceeding 3A001.a.5.b.2 (resolution 12 bit or more with an adjusted update rate exceeding 1.25 GSPS). (Its 4 GSPS / ≥12-bit ADC channels independently exceed 3A001.a.5.a.3 — 12 to <14 bit at >400 MSPS — so the device is controlled on both counts.) On-chip digital up/down conversion and the JESD204B/C interface do not remove it from 3A001; no lower catch"}}}, {"id": "adi-ad9162bbcz", "item_name": "6 GSPS RF digital-to-analog converter, to 5 GHz", "category": "3", "gold": "3A001.a.5.b.2", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "3A001.a.5.b", "grade": 0.7, "level": "eccn", "error": false}, "gpt-4o": {"eccn": "3A001.a.5.a", "grade": 0.7, "level": "eccn", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.7, "level": "eccn", "error": false}, "claude-opus-4-8::agentic": {"eccn": "3A001.a.5.b.2", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "digital-to-analog converter DAC 6 GSPS 16-bit high speed"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.a.5"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.a.5.b"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.a.5.b.2"}}], "reasoning": "The item is a digital-to-analog converter (DAC) integrated circuit, covered by Category 3 ECCN 3A001.a.5.b (DAC ICs). It has a resolution of 16 bit (≥12 bit) and an update/sample rate of 6 GSPS = 6,000 MSPS, which exceeds the 1,250 MSPS adjusted-update-rate threshold of 3A001.a.5.b.2 (resolution of 12 bit or more with adjusted update rate exceeding 1,250 MSPS). Both criteria are met, so it is controlled at 3A001.a.5.b.2 (reasons NS/AT), not EAR99."}}}, {"id": "adi-adau1452kcpz", "item_name": "300 MHz 32-bit audio digital signal processor", "category": "3", "gold": "3A991.a.2", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "3A001.a.7", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.4, "level": "group", "error": false}, "claude-opus-4-8::agentic": {"eccn": "3A991.a.2", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "32-bit digital signal processor 300 MHz audio"}}, {"tool": "get_category_outline", "input": {"category": "3"}}, {"tool": "read_eccn", "input": {"eccn": "3A001"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}], "reasoning": "The item is a 32-bit audio digital signal processor (a microprocessor/DSP microcircuit; 3A001.a.3's note confirms DSPs are treated as such). It does not meet 3A001 thresholds: it is silicon-based (not a compound semiconductor, so not 3A001.a.3), is not radiation-hardened (3A001.a.1), and is not rated for extreme temperature ranges (3A001.a.2). It therefore falls to the catch-all 3A991, whose paragraph a covers microprocessor/DSP microcircuits not controlled by 3A001; under a.2 a clock frequency exceeding 25 MHz is controlled, and this device runs at 300 MHz, far exceeding that threshold. Reaso"}}}, {"id": "microchip-dspic33ep512mu810-i-pf", "item_name": "16-bit digital signal controller, 60 MIPS", "category": "3", "gold": "3A991.a.2", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "3A001.a.7", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.b", "grade": 0.4, "level": "group", "error": false}, "claude-opus-4-8::agentic": {"eccn": "3A991.a.2", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "16-bit digital signal controller microcontroller with DSP engine, 60 MIPS, embedded flash"}}, {"tool": "get_category_outline", "input": {"category": "3"}}, {"tool": "read_eccn", "input": {"eccn": "3A001"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}], "reasoning": "The item is a standard silicon 16-bit microcontroller/digital signal controller. It does not meet 3A001 controls: 3A001.a.3 applies only to microcontrollers manufactured from a compound semiconductor (this is silicon), and 3A001.a.2 applies only to extended-temperature-rated ICs (not indicated). No other 3A001 high-performance threshold (radiation hardening, ADC/DAC sample rates) is met. It is therefore captured by the AT-controlled catch-all 3A991.a for \"microcontroller microcircuits,\" specifically 3A991.a.2 (\"A clock frequency rate exceeding 25 MHz\"), since a 60 MIPS DSC runs at a clock well"}}}, {"id": "st-stm32f407vgt6", "item_name": "32-bit ARM Cortex-M4 microcontroller, 168 MHz", "category": "3", "gold": "3A991.a.2", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "3A991.a.2", "grade": 1.0, "level": "exact", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a.1", "grade": 0.4, "level": "group", "error": false}, "claude-opus-4-8::agentic": {"eccn": "3A991.a.2", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "32-bit microcontroller microprocessor ARM Cortex-M4 168 MHz embedded"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "3"}}, {"tool": "read_eccn", "input": {"eccn": "3A001"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}], "reasoning": "The item is a general-purpose silicon ARM Cortex-M4 microcontroller microcircuit. It is not controlled by 3A001: it is not radiation-hardened (3A001.a.1), is not rated for extended/military temperature ranges (3A001.a.2), and is not manufactured from a compound semiconductor (3A001.a.3). At 168 MHz it is also far below the 5 GFLOPS performance threshold of §744.17. It is therefore captured by the catch-all entry 3A991, which controls \"microcontroller microcircuits\" not controlled by 3A001 having (a.2) \"a clock frequency rate exceeding 25 MHz.\" The 168 MHz clock exceeds 25 MHz, so the device fa"}}}, {"id": "adi-ad9361bbcz", "item_name": "Wideband 2x2 RF agile transceiver, 47 MHz-6 GHz", "category": "5", "gold": "5A991.b.1", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A001.b.3", "grade": 0.4, "level": "group", "error": false}, "gpt-4o": {"eccn": "5A991.b.5", "grade": 0.7, "level": "eccn", "error": false}, "qwen3-32b": {"eccn": "8A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "wideband RF agile transceiver tunable 47 MHz to 6 GHz software defined radio integrated circuit"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "read_eccn", "input": {"eccn": "3A001"}}, {"tool": "get_category_outline", "input": {"category": "3"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.b"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.b.4"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.b.7"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}, {"tool": "read_eccn", "input": {"eccn": "5A991"}}, {"tool": "read_eccn", "input": {"eccn": "5A001"}}], "reasoning": "General-purpose 2x2 RF agile transceiver IC (47 MHz–6 GHz, ≤56 MHz channel BW). The integrated 12-bit-class data converters run at output rates far below the ADC/DAC thresholds of 3A001.a.5 (>400 MSPS for 12-bit) and the catch-all 3A991.c (>105 Mwords/s for 12-bit), so it is not controlled in Category 3. Its RF range (to 6 GHz) is well below the telecom control thresholds (5A001.d/5A991.b.6 at >26.5 GHz), and as a general-purpose commercial component it is not a 'specially designed' part of any controlled telecom system per 5A001.b/5A991.b, nor does it meet those entries' modulation/transfer-r"}}}, {"id": "adi-adrv9009bbcz", "item_name": "Integrated dual-channel RF transceiver, 75 MHz-6 GHz", "category": "5", "gold": "5A991.b.1", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "3A001.b.2", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "3A001.b.12", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A991.b.1", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "integrated RF transceiver software-defined radio 75 MHz to 6 GHz transmit receive bandwidth"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "read_eccn", "input": {"eccn": "3A001"}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.b"}}, {"tool": "read_eccn", "input": {"eccn": "5A001"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.b.8"}}, {"tool": "read_eccn", "input": {"eccn": "5A991"}}, {"tool": "read_eccn", "input": {"eccn": "3A001.a.5"}}], "reasoning": "The item is a radio transceiver IC — a specially designed component of telecommunication transmission (radio) equipment. It does not meet 5A001's specific controls (not inherently spread-spectrum/frequency-hopping radio equipment per b.3; 200 MHz bandwidth is below the 500 MHz UWB threshold of b.4; not a >1,000-channel signal-identifying receiver per b.5) and is not captured by 3A001 (commercial temperature range, not rad-hardened; ICs containing ADCs that process digitized data fall under 3A001.a.2, which controls only military temperature-rated parts). As a radio/transmission-equipment compo"}}}, {"id": "adi-adsp-sc589bbcz-4b", "item_name": "Dual-SHARC + ARM system-on-chip processor", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "3A991.a.1", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "3A001.a.2.c", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "3A991.a", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "microprocessor DSP floating point digital signal processor system-on-chip ARM core"}}, {"tool": "get_category_outline", "input": {"category": "3"}}, {"tool": "read_eccn", "input": {"eccn": "3A001"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}], "reasoning": "The item is a silicon microprocessor/DSP system-on-chip (ARM Cortex-A5 + dual floating-point SHARC DSP cores). It does not meet 3A001.a.2 (no extreme temperature/radiation rating) or 3A001.a.3 (not manufactured from a compound semiconductor), and it falls far below the high-performance IC thresholds of 3A090/3A991.p. It is therefore captured by the AT-controlled catch-all 3A991.a for \"Microprocessor microcircuits ... not controlled by 3A001,\" specifically 3A991.a.2 (clock frequency rate exceeding 25 MHz — the ARM and SHARC cores operate at hundreds of MHz), and likely also a.1 (≥5 GFLOPS with "}}}, {"id": "adi-maxq1061etp", "item_name": "Cryptographic security controller IC", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A002.a", "grade": 0.4, "level": "group", "error": false}, "gpt-4o": {"eccn": "5A002.a.1", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "5A002.b.2", "grade": 0.4, "level": "group", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A002.a.1", "grade": 0.4, "level": "group", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "cryptographic security controller IC AES ECDSA TLS secure boot random number generator"}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A002"}}], "reasoning": "The IC is a \"component\" providing the means/functions necessary for \"information security\" (Related Control 1 — such components are presumptively specially designed and controlled by 5A002.a). It implements 'cryptography for data confidentiality' using 'described security algorithms' per Technical Note 2: AES is a symmetric algorithm with key length >56 bits (2.a), and ECDH is an asymmetric algorithm based on elliptic-curve discrete logarithms >112 bits (2.b.3). The capability is usable/activated by default. Because it is a dedicated hardware cryptographic controller whose primary function is "}}}, {"id": "espressif-esp32-wroom-32e-n4", "item_name": "2.4 GHz Wi-Fi + Bluetooth module, 4 MB flash", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A992.c", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "5A992.c", "grade": 1.0, "level": "exact", "error": false}, "qwen3-32b": {"eccn": "8B002.b.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A992.c", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "2.4 GHz Wi-Fi Bluetooth wireless transceiver module short range"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A002"}}, {"tool": "read_eccn", "input": {"eccn": "5A992"}}], "reasoning": "The module is a digital communication/networking component (Cat. 5 Part 2 information security) employing 'cryptography for data confidentiality' with a 'described security algorithm' — AES (symmetric key >56 bits) used for Wi-Fi WPA2/WPA3 and Bluetooth/BLE link security — placing it within the scope of 5A002.a.2. However, commodity 2.4 GHz Wi-Fi/Bluetooth connectivity modules of this type are standard, widely-available networking components that qualify as mass-market encryption commodities (Cryptography Note 3 / § 740.17(b)). Per 5A002 Related Control note (5), such mass-market encryption co"}}}, {"id": "microchip-atecc608b-mahda-t", "item_name": "Secure element / crypto authentication IC", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A002.a", "grade": 0.4, "level": "group", "error": false}, "gpt-4o": {"eccn": "5A002.a.1", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A002.a.1", "grade": 0.4, "level": "group", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "secure element cryptographic authentication IC ECDSA AES integrated circuit"}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A002"}}], "reasoning": "The item is a hardware secure element/cryptographic component whose primary function is information security. It implements AES-128, a symmetric algorithm with a 128-bit key (>56 bits), which qualifies as a 'described security algorithm' under 5A002 Technical Note 2.a and provides data-confidentiality encryption (a cryptographic function not within the excluded list of authentication/signature/integrity/key-management in TN 1). Because this cryptography for data confidentiality is usable/activated, the component is controlled by 5A002.a. As an item whose primary function is information securit"}}}, {"id": "microchip-pic32mz2048efm144-i-ph", "item_name": "32-bit MCU with hardware crypto engine", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A002.a.1", "grade": 0.4, "level": "group", "error": false}, "gpt-4o": {"eccn": "5A002.a.1", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "5A002.b", "grade": 0.4, "level": "group", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A002.a.3", "grade": 0.4, "level": "group", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "microcontroller with hardware cryptographic engine AES 3DES SHA random number generator"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "read_eccn", "input": {"eccn": "5A002"}}, {"tool": "get_category_outline", "input": {"category": "5"}}], "reasoning": "The MCU integrates a hardware crypto engine implementing AES and 3DES — \"symmetric algorithms\" with key lengths in excess of 56 bits — providing 'cryptography for data confidentiality' having a 'described security algorithm' that is usable/activated (5A002 Technical Notes 1 and 2.a). The device's primary function is information processing (a microcontroller), so it falls within 5A002.a.3 (\"Computers, other items having information storage or processing as a primary function, and components therefor\"). Per Related Controls (1), components providing the means/functions necessary for information "}}}, {"id": "microchip-rn4871-v-rm118", "item_name": "Bluetooth Low Energy 4.2 radio module", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A991.b", "grade": 0.4, "level": "group", "error": false}, "gpt-4o": {"eccn": "5A991.b.2", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "4A001.a.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A992.c", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "Bluetooth Low Energy 2.4 GHz short range wireless transceiver radio module"}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A992"}}, {"tool": "read_eccn", "input": {"eccn": "5A002"}}], "reasoning": "The module is a 2.4 GHz Bluetooth Low Energy wireless transceiver, i.e., a digital communications/networking component that employs AES-128 (a 'symmetric algorithm' with key length >56 bits) for data confidentiality — a 'described security algorithm' under 5A002 Technical Note 2.a. As such it is information-security functionality nominally within 5A002.a.2. However, a certified, consumer-oriented short-range Bluetooth radio module qualifies as a mass-market encryption commodity; under §740.17(b) and Related Control Note (5) of 5A002 such items are released from EI/NS controls and designated 5A"}}}, {"id": "rpi-sc0668", "item_name": "Quad-core ARM Cortex-A72 compute module (2 GB / 16 GB)", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A992.c", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "ARM Cortex single board computer system-on-module quad-core processor"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "4"}}, {"tool": "read_eccn", "input": {"eccn": "4A994"}}, {"tool": "read_eccn", "input": {"eccn": "4A003"}}, {"tool": "read_eccn", "input": {"eccn": "5A992"}}], "reasoning": "The SoM is a low-performance computer (quad Cortex-A72 @1.5 GHz) far below the 4A003 APP threshold (70 WT) and the 4A090 AI parameters, so it is not a controlled high-performance computer. It does, however, incorporate wireless connectivity (Wi-Fi/Bluetooth) employing standardized cryptography (e.g., AES/WPA2) for data confidentiality, giving it 'information security' functionality. Per Note 1 to Category 5, Part 2, that functionality determines classification under Cat 5 Part 2 rather than the Cat 4 computer catch-all (4A994). As a consumer/mass-market device, it qualifies as a mass-market en"}}}, {"id": "ti-am3358bzcz100", "item_name": "1 GHz ARM Cortex-A8 applications microprocessor", "category": "5", "gold": "5A992.c", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "3A991.a.1", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.b.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "3A991.a.2", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "general purpose microprocessor microcontroller ARM applications processor 1 GHz"}}, {"tool": "get_category_outline", "input": {"category": "3"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}, {"tool": "read_eccn", "input": {"eccn": "3A001"}}], "reasoning": "A general-purpose silicon \"microprocessor microcircuit.\" It is not captured by 3A001: 3A001.a.2 requires military/extended temperature ratings (not indicated) and 3A001.a.3 applies only to compound-semiconductor microprocessors (this is silicon). It therefore falls to the catch-all 3A991.a, which controls microprocessor microcircuits having \"a clock frequency rate exceeding 25 MHz\" (3A991.a.2) — the 1.0 GHz clock far exceeds this. It does not meet 3A991.p's 8 TOPS / 150 GB/s thresholds. Controlled for AT only."}}}, {"id": "adi-adis16480bmlz", "item_name": "10-DOF MEMS inertial measurement unit with on-board sensor fusion", "category": "7", "gold": "7A994", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "7A994", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "7A103", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "9A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "7A994", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "MEMS inertial measurement unit gyroscope accelerometer magnetometer attitude heading"}}, {"tool": "get_category_outline", "input": {"category": "7"}}, {"tool": "read_eccn", "input": {"eccn": "7A003"}}, {"tool": "read_eccn", "input": {"eccn": "7A001"}}, {"tool": "read_eccn", "input": {"eccn": "7A002"}}, {"tool": "read_eccn", "input": {"eccn": "7A994"}}, {"tool": "read_eccn", "input": {"eccn": "7A107"}}, {"tool": "read_eccn", "input": {"eccn": "7A103"}}], "reasoning": "This is a commercial-grade MEMS IMU/AHRS. Its gyro (±450°/s) and accelerometer (±10 g) do not meet the navigation-grade bias/scale-factor/ARW thresholds of 7A002 or 7A001, so 7A003.d (and thus 7A003) is not triggered; it also lacks the positioning/heading accuracies of 7A003.a-c. Because its sensors are not controlled by 7A001/7A002/7A101/7A102, 7A103.a does not apply, and the magnetometer does not meet all 7A107 criteria (azimuth accuracy <0.5° rms, integration with flight-control/nav systems). As inertial/avionic navigation equipment n.e.s. not controlled by 7A003 or 7A103, it falls in the A"}}}, {"id": "adi-adis16545-3bmlz", "item_name": "Precision 6-DOF MEMS IMU, ±2000°/s gyro range", "category": "7", "gold": "7A003.d.1", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "7A003", "grade": 0.7, "level": "eccn", "error": false}, "gpt-4o": {"eccn": "7A003.d.2", "grade": 0.7, "level": "eccn", "error": false}, "qwen3-32b": {"eccn": "9A001.a.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "7A003.d.1", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "MEMS inertial measurement unit IMU gyroscope accelerometer bias stability degrees per hour"}}, {"tool": "get_category_outline", "input": {"category": "7"}}, {"tool": "read_eccn", "input": {"eccn": "7A003"}}, {"tool": "read_eccn", "input": {"eccn": "7A001"}}, {"tool": "read_eccn", "input": {"eccn": "7A002"}}], "reasoning": "The item is a multi-axis (6-DOF) inertial measurement unit, expressly an 'IMU' under 7A003. It provides angular-rate and acceleration measurement in more than one dimension (7A003.d). Its triaxial gyro has a ±2000°/s range (≥500 deg/s, so 7A002.a.2 applies) and ~0.7°/hr in-run bias stability, which is better (lower) than the 4 deg/hr threshold of 7A002.a.2.a. Because the gyro performance meets 7A002 along its axes, the IMU satisfies 7A003.d.1 ('performance specified by 7A001 or 7A002 along any axis'). Controlled NS/MT/AT."}}}, {"id": "adi-adxrs453brgz", "item_name": "±300°/s single-axis MEMS angular rate gyroscope", "category": "7", "gold": "7A994", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "7A994", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "7A994", "grade": 1.0, "level": "exact", "error": false}, "qwen3-32b": {"eccn": "9A001.a.4", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "7A994", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "single-axis MEMS angular rate gyroscope bias stability"}}, {"tool": "get_category_outline", "input": {"category": "7"}}, {"tool": "read_eccn", "input": {"eccn": "7A002"}}, {"tool": "read_eccn", "input": {"eccn": "7A102"}}, {"tool": "read_eccn", "input": {"eccn": "7A994"}}], "reasoning": "The item is a single-axis MEMS angular rate gyroscope. Its ±300°/s range falls under 7A002.a.1 (range <500°/s), but that entry requires bias stability better (less) than 0.5°/hr (a.1.a) or ARW ≤0.0035°/√hr (a.1.b); the device's ~16°/hr null bias stability is far worse, so 7A002.a is not met. 7A002.b requires being specified to FUNCTION at linear acceleration >100 g — the stated 2000 g figure is a powered-shock survival spec, not a specified operating acceleration level, so 7A002.b is not met. 7A102 likewise requires <0.5°/hr drift-rate stability or >100 g functioning, neither met. As a navigat"}}}, {"id": "honeywell-hguide-i300", "item_name": "Tactical-grade 6-DOF MEMS inertial measurement unit (~1 cubic inch)", "category": "7", "gold": "7A994", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "7A003", "grade": 0.4, "level": "group", "error": false}, "gpt-4o": {"eccn": "7A003.d", "grade": 0.4, "level": "group", "error": false}, "qwen3-32b": {"eccn": "3A001.b.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "7A994", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "MEMS inertial measurement unit 6-DOF gyroscope accelerometer tactical grade"}}, {"tool": "get_category_outline", "input": {"category": "7"}}, {"tool": "read_eccn", "input": {"eccn": "7A003"}}, {"tool": "read_eccn", "input": {"eccn": "7A994"}}, {"tool": "read_eccn", "input": {"eccn": "7A001"}}, {"tool": "read_eccn", "input": {"eccn": "7A002"}}], "reasoning": "The item is an inertial measurement unit (Category 7 navigation/inertial sensing). It does not meet 7A003: it provides no navigation-grade standalone position (7A003.a accuracies of ~0.8 nm/hr CEP), and its constituent MEMS sensors fall below the 7A001/7A002 thresholds invoked by 7A003.d — tactical/industrial-grade MEMS gyros do not reach 7A002's bias stability < 0.5°/hr over one month or ARW ≤ 0.0035°/√hr, and MEMS accelerometers do not reach 7A001's < 130 µg bias / < 130 ppm scale-factor stability. As inertial navigation/sensing equipment not controlled by 7A003 or 7A103, it is captured by t"}}}, {"id": "piper-101918-coax-gps", "item_name": "Aircraft GPS antenna coaxial cable assembly", "category": "9", "gold": "9A991.d", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "EAR99", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.d", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "7A994", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "coaxial cable assembly RF interconnect aircraft antenna"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "7"}}, {"tool": "read_eccn", "input": {"eccn": "7A994"}}], "reasoning": "The item is a coaxial cable assembly functioning as an RF interconnect/component for an aircraft GPS antenna-to-navigation-receiver path. It is not a satellite-navigation receiver itself (so not 7A005/7A105) and has no MT-controlled or decryption/adaptive-antenna features. As a part/component of aircraft navigation/avionics equipment it is captured by the avionics basket entry 7A994, which covers \"other avionic equipment, including 'parts' and 'components,' n.e.s.\" (the entry note also confirms typical commercial GPS items fall under 7A994). Controlled for AT reasons only."}}}, {"id": "piper-553-876-camlatch", "item_name": "Aircraft access-panel cam latch (airframe hardware)", "category": "9", "gold": "9A991.d", "verified": false, "preds": {"claude-opus-4-8": {"eccn": "9A991.d", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "9A991.d", "grade": 1.0, "level": "exact", "error": false}, "qwen3-32b": {"eccn": "1A001", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "9A991.d", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "aircraft access panel cam latch airframe hardware mechanical fastener"}}, {"tool": "get_category_outline", "input": {"category": "9"}}, {"tool": "read_eccn", "input": {"eccn": "9A991"}}], "reasoning": "The item is a cam latch specially designed for closure/retention of access, inspection, and cargo panels on fixed-wing aircraft — i.e., airframe hardware that is a \"part/component\" specially designed for civil aircraft. It does not meet any specific high-performance Category 9 control (not an engine, UAV, spacecraft, or military aircraft component), so it falls to the basket entry 9A991, specifically 9A991.d, \"'Parts' and 'components,' 'specially designed' for 'aircraft,' n.e.s.\" Controlled AT only."}}}, {"id": "adi-ad7768bstz", "item_name": "8-channel 24-bit sigma-delta ADC, 256 kSPS", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "3A001.a.5.a", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "read_eccn", "input": {"eccn": "3A001.a.5"}}, {"tool": "search_ccl", "input": {"query": "analog-to-digital converter 24-bit sigma-delta 256 kSPS sampling"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}], "reasoning": "The item is an analog-to-digital converter integrated circuit. Under 3A001.a.5.a.5, a 16-bit-or-more ADC is controlled only if its sample rate exceeds 65 MSPS; this device runs at 256 kSPS (0.256 MSPS), far below that. Under the AT catch-all 3A991.c.4, ADCs of more than 14-bit resolution are controlled only with an output rate greater than 2.5 million words/second; at 256 kSPS per channel (≈2.05 million words/s even aggregated over 8 channels), it is below the threshold. It also is not rated for the extreme temperature ranges in 3A001.a.2. No specific or basket CCL entry's parameters are met, "}}}, {"id": "adi-adf7021bcpz", "item_name": "Narrow-band sub-1 GHz ISM RF transceiver", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A991.b", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "5A991.b.5", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "narrow-band sub-1 GHz ISM RF transceiver FSK GFSK low-power wireless data link"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A001"}}, {"tool": "read_eccn", "input": {"eccn": "5A991"}}], "reasoning": "A narrow-band sub-1 GHz (80-650 MHz, 862-950 MHz) low-power FSK/GFSK ISM transceiver IC does not meet any 5A001 control (no spread-spectrum/frequency-hopping with programmable codes, no UWB, not radiation/EMP-hardened, no >1000-channel scanning receiver, and operating frequency is far below the GHz-range phased-array thresholds). It also fails every 5A991 radio threshold: frequency is sub-1 GHz (not >26.5/31 GHz of 5A991.b.6); 2-level FSK/GFSK has spectral efficiency well below the 3 bit/s/Hz limit of 5A991.b.7.c and is not QAM; and low-power metering/data-link rates are far below the 45/90 Mb"}}}, {"id": "lattice-ice40hx4k-tq144", "item_name": "Low-power FPGA, ~3,520 logic cells", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "3A001.a.7", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "3A001.a.7", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "read_eccn", "input": {"eccn": "3A001"}}, {"tool": "search_ccl", "input": {"query": "field programmable gate array FPGA logic cells integrated circuit"}}, {"tool": "read_eccn", "input": {"eccn": "3A991"}}], "reasoning": "The item is a commercial low-power FPGA (field programmable logic device). 3A001.a.2 lists FPLDs but only controls them when rated for extended-temperature operation (>+125°C, <-55°C, or the full range); this is a standard commercial-temperature device, so it falls below 3A001. The catch-all 3A991.d controls FPGAs with single-ended digital I/O between 200 and 700, but this device has only 107 I/O, below the 200 floor. It also falls far below 3A991.p thresholds (8 TOPS / 150 GB/s). No specific or basket CCL entry describes it, so it is EAR99."}}}, {"id": "microchip-ksz8794cnxic-tr", "item_name": "Four-port managed 10/100 Ethernet switch", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "5A991.b.4", "grade": 0.0, "level": "none", "error": false}, "gpt-4o": {"eccn": "5A991.b.4", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A991.b.4.a", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "managed 10/100 Ethernet switch layer-2 networking"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A991"}}, {"tool": "read_eccn", "input": {"eccn": "5A001"}}], "reasoning": "The item is a Layer-2 managed 4-port 10/100 Ethernet switch IC (with integrated PHYs/MAC) functioning as a media-access/bridging device — a telecommunications component. It meets none of the high-performance characteristics of 5A001 (no nuclear/EMP/radiation hardening, no extreme-temperature design, no controlled radio, optical, or antenna features), so it falls to the 5A991 telecommunications basket. Under 5A991.b (transmission equipment and specially designed components, expressly including \"media access units\" and \"bridges\"), paragraph b.4.a controls equipment containing \"network access con"}}}, {"id": "microchip-lan8720a-cp-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "5A991.b.4", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "8A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A991.b.4.a", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "Ethernet PHY transceiver 10/100 physical layer IEEE 802.3 RMII"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A991"}}, {"tool": "read_eccn", "input": {"eccn": "5A001"}}], "reasoning": "The item is a commercial IEEE 802.3 10/100 Ethernet PHY transceiver IC with no cryptographic function, so 5A002/5A992 are inapplicable, and it does not meet any 5A001 high-performance/ruggedization threshold. It is a specially designed component of Ethernet LAN (\"network access controller\"/media-access) transmission equipment, captured by the telecom catch-all 5A991.b. Its 100BASE-TX mode operates at 100 Mbit/s, exceeding the 33 Mbit/s digital-transfer-rate threshold for network access controllers and their related common medium in 5A991.b.4.a (also above the 45 Mbit/s threshold of b.1). Reaso"}}}, {"id": "microchip-lan8742a-cz-tr", "item_name": "10/100 Ethernet PHY transceiver (RMII)", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "5A991.b.4", "grade": 0.0, "level": "none", "error": false}, "qwen3-32b": {"eccn": "3A001.a.1.a", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "5A991.b.4.a", "grade": 0.0, "level": "none", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "Ethernet physical-layer transceiver PHY 10/100 networking integrated circuit"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "get_category_outline", "input": {"category": "5"}}, {"tool": "read_eccn", "input": {"eccn": "5A991"}}], "reasoning": "The item is a single-port 10/100 Ethernet physical-layer transceiver — a \"specially designed\" component of telecommunication transmission equipment (a media access unit / LAN network access controller and its related common medium operating over wire). It is not controlled by 5A001, so the catch-all 5A991 governs. Under 5A991.b, transmission equipment and specially designed components are controlled where they contain a \"network access controller\" and its related common medium having a digital transfer rate exceeding 33 Mbit/s (5A991.b.4.a). Operating at 100BASE-TX (100 Mbit/s), this PHY excee"}}}, {"id": "thorlabs-bb1-e02", "item_name": "1-inch broadband dielectric mirror, 400-750 nm", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false}, "qwen3-32b": {"eccn": "11A002.b", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "dielectric mirror multilayer coating high reflectance optical mirror visible"}}, {"tool": "get_category_outline", "input": {"category": "6"}}, {"tool": "read_eccn", "input": {"eccn": "6A004"}}, {"tool": "read_eccn", "input": {"eccn": "6A994"}}], "reasoning": "A 25.4 mm broadband dielectric mirror on fused silica for visible beam steering meets no 6A004 parameter: it is not a deformable mirror (6A004.a.1), not a lightweight monolithic/composite mirror (a.2/a.3), its 25.4 mm diameter is below the 50/100 mm beam-steering-mirror thresholds of 6A004.a.4, it is not ZnSe/ZnS (b), not space-qualified (c), and not a >400 mm aspheric element (e). The 6A994 catch-all controls only certain optical filters and fluoride fiber, not standard mirrors. With no specific or basket CCL entry applicable, the item is EAR99."}}}, {"id": "thorlabs-km100", "item_name": "Kinematic mirror mount for 1-inch optics", "category": "EAR99", "gold": "EAR99", "verified": true, "preds": {"claude-opus-4-8": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false}, "gpt-4o": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false}, "qwen3-32b": {"eccn": "8B001.a.1", "grade": 0.0, "level": "none", "error": false}, "claude-opus-4-8::agentic": {"eccn": "EAR99", "grade": 1.0, "level": "exact", "error": false, "tool_calls": [{"tool": "search_ccl", "input": {"query": "kinematic mirror mount tip tilt adjustment optical mount positioning"}}, {"tool": "list_ccl_categories", "input": {}}, {"tool": "read_eccn", "input": {"eccn": "6A004"}}, {"tool": "get_category_outline", "input": {"category": "6"}}, {"tool": "read_eccn", "input": {"eccn": "6A994"}}], "reasoning": "The item is a passive, manually-adjusted kinematic optomechanical mount (tip/tilt via micrometer screws, spring retention) that merely holds a 1-inch optic. It is not an optical element/mirror itself, so 6A004.a and the 6A994 catch-all (which covers only filters and fluoride fiber) do not apply. It lacks any electronic control and does not meet the 6A004.d.2.a beam-steering mirror-stage thresholds (≥500 Hz resonant frequency, ≤10 µrad accuracy, ±26 mrad travel, with specially designed electronic control). It is not a numerically-controlled precision positioning table (2B121). No specific or ba"}}}], "grade_weights": {"exact": 1.0, "eccn": 0.7, "group": 0.4, "category": 0.2, "none": 0.0}, "equalized": false};
+const $=(s,r=document)=>r.querySelector(s), el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const pct=x=>Math.round(x*100), f2=x=>x.toFixed(2);
+const LADDER=["exact","eccn","group","category","none","error"];
+const LEVELC={exact:"var(--exact)",eccn:"var(--t-eccn)",group:"var(--t-group)",category:"var(--t-cat)",none:"var(--t-none)",error:"#7a3330"};
 
-// ---- meta chips
-const m = R.models.find(x=>x.model===current);
-document.getElementById("meta").innerHTML = [
-  `<span class="chip"><b>${R.n_questions}</b> questions</span>`,
-  `<span class="chip">dataset <b>${R.dataset.split(/[\\/]/).pop()}</b></span>`,
-  R.citable ? `<span class="chip ok">✓ verified-only · citable</span>`
-            : `<span class="chip warn">⚠ includes unverified · not citable</span>`,
-  R.rag ? `<span class="chip">RAG on</span>` : `<span class="chip">no RAG</span>`,
-  `<span class="chip">generated <b>${DATA.generated}</b></span>`,
-].join("");
+$("#nbadge").textContent="n = "+DATA.dataset.total+" commodities";
+$("#gen").textContent=DATA.generated;
 
-// ---- leaderboard + model picker (only if >1 model)
-if (R.models.length > 1){
-  buildLeaderboard();
-  document.getElementById("modelpick-wrap").style.display="block";
-  document.getElementById("modelpick").innerHTML =
-    R.models.map(x=>`<button data-m="${x.model}" class="${x.model===current?'active':''}">${x.model}</button>`).join("");
-  document.querySelectorAll("#modelpick button").forEach(b=>b.onclick=()=>{
-    current=b.dataset.m;
-    document.querySelectorAll("#modelpick button").forEach(z=>z.classList.toggle("active",z.dataset.m===current));
-    render();
+/* hero */
+const TL=DATA.toollift, b0=TL.baseline.all.grade, a0=TL.agentic.all.grade;
+$("#hin").textContent=DATA.dataset.total;
+$("#hfrom").textContent=f2(b0); $("#hto").textContent=f2(a0);
+$("#hdelta").textContent="+"+Math.round((a0-b0)/b0*100)+"%";
+$("#hbv").textContent=f2(b0); $("#htv").textContent=f2(a0);
+$("#hmeta").textContent=TL.model+" · "+TL.mean_tool_calls+" tool calls/item · exact "+f2(TL.baseline.all.exact)+" → "+f2(TL.agentic.all.exact);
+$("#toolavg").textContent="On average "+TL.mean_tool_calls+" tool calls per item.";
+
+/* leaderboard */
+function ladderBar(ld,n){
+  const bar=el("div","ladder");
+  LADDER.forEach(k=>{const c=ld[k]||0; if(!c)return; const s=el("span","lx-"+k); s.style.width=(c/n*100)+"%"; s.title=k+": "+c; bar.appendChild(s);});
+  return bar;
+}
+function renderLB(split){
+  const host=$("#leaderboard"); host.innerHTML="";
+  DATA.crossmodel.forEach((m,i)=>{
+    const s=m.split[split];
+    const row=el("div","lb-row");
+    const left=el("div"); left.innerHTML=`<div class="lb-name"><span class="rank">${String(i+1).padStart(2,"0")}</span>${m.name}${m.weight==="open"?'<span class="open">open</span>':''}</div><div class="lb-meta">${m.vendor} · ${m.mode}</div>`;
+    const mid=el("div"); mid.appendChild(ladderBar(s.ladder,s.n));
+    const right=el("div","lb-metrics"); right.innerHTML=`<div class="grade" style="color:${i===0?'var(--teal)':'var(--paper)'}">${f2(s.grade)}</div><div class="sub">grade · exact ${f2(s.exact)} · n=${s.n}</div>`;
+    row.append(left,mid,right); host.appendChild(row);
   });
 }
+renderLB("all");
+$("#lbToggle").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  [...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b)); renderLB(b.dataset.split);});
 
-function buildLeaderboard(){
-  document.getElementById("board-wrap").style.display="block";
-  const metrics = [
-    {k:"exact_accuracy", l:"Exact"},
-    {k:"eccn_accuracy", l:"ECCN head"},
-    {k:"group_accuracy", l:"Cat+group"},
-    {k:"category_accuracy", l:"Category"},
-    {k:"mean_grade", l:"Mean grade"},
-  ];
-  // best value per metric for highlighting
-  const best = {};
-  metrics.forEach(m=>best[m.k]=Math.max(...R.models.map(x=>x[m.k])));
-  const ranked = R.models.slice().sort((a,b)=>b.mean_grade-a.mean_grade);
-
-  document.getElementById("board-head").innerHTML =
-    `<th>Model</th>` + metrics.map(m=>`<th>${m.l}</th>`).join("") + `<th>Errors</th>`;
-  document.getElementById("board-body").innerHTML = ranked.map((m,i)=>{
-    const cells = metrics.map(mt=>{
-      const v=m[mt.k], isBest=Math.abs(v-best[mt.k])<1e-9;
-      return `<td class="numcell"><div class="cellbar ${isBest?'best':''}">
-        <span class="v">${pct(v)}</span>
-        <div class="track"><i style="width:${(v*100).toFixed(1)}%"></i></div></div></td>`;
-    }).join("");
-    return `<tr>
-      <td><span class="rank ${i===0?'r1':''}">${i+1}</span><span class="mname">${m.model}</span></td>
-      ${cells}
-      <td class="numcell"><span class="gr" style="color:${m.errors?'var(--none)':'var(--exact)'}">${m.errors}</span></td>
-    </tr>`;
-  }).join("");
-}
-
-function render(){
-  const m = R.models.find(x=>x.model===current);
-  const rows = DATA.rows[current] || [];
-  document.getElementById("hl-model").textContent = current;
-
-  // ---- cards
-  const cards = [
-    {k:"exact_accuracy", l:"Exact ECCN match", hero:true, sub:"full subparagraph"},
-    {k:"eccn_accuracy",  l:"ECCN head", sub:"ignores subparagraph"},
-    {k:"group_accuracy", l:"Category + group", sub:'e.g. "3A"'},
-    {k:"category_accuracy", l:"Category", sub:'e.g. "3"'},
-    {k:"mean_grade", l:"Mean graded score", sub:"partial credit, 0–1"},
-    {k:"parse_rate", l:"Parse rate", sub:"answered cleanly"},
-  ];
-  document.getElementById("cards").innerHTML = cards.map(c=>{
-    const v = m[c.k];
-    return `<div class="card ${c.hero?'hero':''}">
-      <div class="label">${c.l}</div>
-      <div class="val">${pct(v)}</div>
-      <div class="bar"><i style="width:${(v*100).toFixed(1)}%"></i></div>
-      <div class="label" style="margin-top:9px;color:var(--faint)">${c.sub}</div>
-    </div>`;
-  }).join("") +
-  `<div class="card">
-      <div class="label">Errors</div>
-      <div class="val" style="color:${m.errors?'var(--none)':'var(--exact)'}">${m.errors}<small> / ${m.n}</small></div>
-      <div class="label" style="margin-top:9px;color:var(--faint)">API / parse failures</div>
-   </div>`;
-
-  // ---- grade ladder
-  const counts = {}; LEVELS.forEach(l=>counts[l]=0);
-  rows.forEach(r=>counts[r.score.level]++);
-  const W = DATA.grade_weights;
-  const ladderDef = [
-    ["exact","Exact"],["eccn","ECCN head"],["group","Cat + group"],["category","Category"],["none","Miss"]
-  ];
-  document.getElementById("ladder").innerHTML = ladderDef.map(([lv,nm])=>`
-    <div class="rung">
-      <div class="w" style="color:var(--${lv})">${W[lv].toFixed(1)}</div>
-      <div class="n"><span class="swatch" style="background:var(--${lv})"></span>${nm}</div>
-      <div class="d">${counts[lv]} item${counts[lv]===1?'':'s'} · ${pct(counts[lv]/(rows.length||1))}</div>
-    </div>`).join("");
-
-  // ---- insights (computed)
-  const ear99Gold = rows.filter(r=>r.gold_eccn==="EAR99");
-  const ear99Hit = ear99Gold.filter(r=>r.predicted_eccn==="EAR99").length;
-  const overclass = ear99Gold.filter(r=>r.predicted_eccn!=="EAR99" && r.score.parsed).length;
-  // most-predicted category prefix (first char of ECCN, or EAR99)
-  const predCat = {};
-  rows.forEach(r=>{const p=r.predicted_eccn; const c = p==="EAR99"?"EAR99":(p[0]||"?"); predCat[c]=(predCat[c]||0)+1;});
-  const topCat = Object.entries(predCat).sort((a,b)=>b[1]-a[1])[0]||["?",0];
-  // most-predicted ECCN head
-  const predHead = {};
-  rows.forEach(r=>{const h=(r.predicted_eccn.match(/^[0-9][A-E][0-9]{3}/)||[r.predicted_eccn])[0]; predHead[h]=(predHead[h]||0)+1;});
-  const topHead = Object.entries(predHead).sort((a,b)=>b[1]-a[1])[0]||["?",0];
-
-  document.getElementById("insights").innerHTML = `
-    <div class="insight">
-      <div class="h">🎯 EAR99 recall</div>
-      <div class="b"><span class="big">${ear99Hit}/${ear99Gold.length}</span> of truly-uncontrolled (EAR99) items
-        were correctly called EAR99. The model called <b>${overclass}</b> of them a <i>controlled</i> ECCN —
-        an over-classification bias (flagging benign parts as export-controlled).</div>
-    </div>
-    <div class="insight">
-      <div class="h">🧲 Anchoring</div>
-      <div class="b">Its single most-predicted ECCN head was <span class="tag">${topHead[0]}</span>
-        used <b>${topHead[1]}×</b> across ${rows.length} items, and category
-        <span class="tag">${topCat[0]}</span> dominated predictions (${topCat[1]}×) —
-        a sign of defaulting to a familiar bucket rather than discriminating.</div>
-    </div>
-    <div class="insight">
-      <div class="h">📊 Where partial credit came from</div>
-      <div class="b">Exact matches: <b>${counts.exact}</b>. Got the <i>category</i> right but not the exact code on
-        <b>${counts.group+counts.category}</b> more — close enough to be "in the right neighborhood,"
-        which the graded score rewards (${m.mean_grade.toFixed(3)} mean) even though exact accuracy is ${pct(m.exact_accuracy)}.</div>
-    </div>
-    <div class="insight">
-      <div class="h">🔧 Harness health</div>
-      <div class="b"><span class="big">${pct(m.parse_rate)}</span> parse rate, <b>${m.errors}</b> errors —
-        every answer was recovered cleanly, so these numbers reflect classification ability, not plumbing.</div>
-    </div>`;
-
-  drawTable(rows);
-  document.getElementById("footer").innerHTML = footerHTML(m, rows);
-}
-
-// ---- table with sort + filter + expandable reasoning
-let filt="all", sortKey="grade", sortDir=1;
-function drawTable(rows){
-  let rs = rows.slice();
-  if (filt!=="all") rs = rs.filter(r=>r.score.level===filt);
-  const cmp = {
-    item:(a,b)=>a.item_name.localeCompare(b.item_name),
-    gold_eccn:(a,b)=>a.gold_eccn.localeCompare(b.gold_eccn),
-    predicted_eccn:(a,b)=>a.predicted_eccn.localeCompare(b.predicted_eccn),
-    level:(a,b)=>LEVELS.indexOf(a.score.level)-LEVELS.indexOf(b.score.level),
-    grade:(a,b)=>a.score.grade-b.score.grade,
-  }[sortKey];
-  rs.sort((a,b)=>cmp(a,b)*sortDir);
-  document.getElementById("tbody").innerHTML = rs.map(r=>{
-    const s=r.score, lv=s.level;
-    const reason = (r.reasoning||"").trim();
-    return `<tr class="row" data-id="${r.id}">
-      <td class="item">
-        <div class="nm">${esc(r.item_name)}</div>
-        <div class="id">${r.id}</div>
-        ${reason?`<span class="expand">show reasoning ▾</span><div class="reason">${esc(reason)}</div>`:''}
-      </td>
-      <td><span class="ecc gold">${r.gold_eccn}</span></td>
-      <td><span class="ecc pred">${r.predicted_eccn||'<span style="color:var(--none)">—</span>'}</span></td>
-      <td><span class="lvl ${lv}">${LVL_NAME[lv]}</span></td>
-      <td style="text-align:right"><span class="gr">${s.grade.toFixed(1)}</span></td>
-    </tr>`;
-  }).join("");
-  document.getElementById("rowcount").textContent = `${rs.length} of ${rows.length}`;
-  document.querySelectorAll(".expand").forEach(e=>e.onclick=ev=>{
-    ev.currentTarget.closest("tr").classList.toggle("open");
+/* tool-lift stats */
+function renderLift(split){
+  const base=TL.baseline[split], ag=TL.agentic[split];
+  const cards=[["exact","exact match"],["eccn","ECCN head"],["group","cat + group"],["grade","mean grade"]];
+  const host=$("#liftStats"); host.innerHTML="";
+  cards.forEach(([k,lbl])=>{
+    const bv=base[k], av=ag[k], up=av>=bv;
+    const s=el("div","stat");
+    s.innerHTML=`<div class="k">${lbl}</div><div class="v"><span class="b4">${f2(bv)}</span><span class="ar">→</span><span class="${up?'up':'dn'}">${f2(av)}</span></div>`;
+    host.appendChild(s);
+  });
+  // category chart
+  const cc=$("#catChart"); cc.innerHTML="";
+  const cats=TL.per_category.slice().sort((x,y)=>y.ag_grade-x.ag_grade);
+  cats.forEach(c=>{
+    const r=el("div","catrow");
+    r.innerHTML=`<div class="cl"><span class="cc">${c.cat}</span>${c.name}<span class="n"> ·n${c.n}</span></div>`;
+    const tr=el("div","track");
+    const bb=el("div","b base"); bb.style.width=(c.base_grade*100)+"%";
+    const tb=el("div","b tool"); tb.style.width=(c.ag_grade*100)+"%";
+    tr.append(bb,tb); r.appendChild(tr);
+    r.appendChild(el("div","cd",`<span class="muted">${f2(c.base_grade)}</span>→${f2(c.ag_grade)}`));
+    cc.appendChild(r);
   });
 }
-function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+renderLift("all");
+$("#liftToggle").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  [...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b)); renderLift(b.dataset.split);});
 
-document.getElementById("controls").addEventListener("click",e=>{
-  const f=e.target.closest(".filt"); if(!f) return;
-  filt=f.dataset.f;
-  document.querySelectorAll(".filt").forEach(x=>x.classList.toggle("active",x===f));
-  drawTable(DATA.rows[current]||[]);
-});
-document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{
-  const k=th.dataset.s;
-  if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=(k==="grade")?-1:1;}
-  document.querySelectorAll("th .ar").forEach(a=>a.textContent="");
-  th.querySelector(".ar").textContent = sortDir>0?"▲":"▼";
-  drawTable(DATA.rows[current]||[]);
-});
-
-function footerHTML(m, rows){
-  const tin = rows.reduce((a,r)=>a+(r.usage?.input_tokens||0),0);
-  const tout = rows.reduce((a,r)=>a+(r.usage?.output_tokens||0),0);
-  return `Headline accuracy is computed over <b>all ${m.n} questions</b> (an error or unparseable answer
-    counts as wrong) so models stay comparable. <code>exact_accuracy_attempted</code> (non-errored only)
-    was ${pct(m.exact_accuracy_attempted)}. Token usage this run: ${tin.toLocaleString()} in /
-    ${tout.toLocaleString()} out. Run id <code>${R.run_id}</code>.<br>
-    ⚠ Graded scoring (1.0 / 0.7 / 0.4 / 0.2 / 0) rewards getting the CCL category right even when the exact
-    subparagraph is wrong; it is a research metric, not BIS's pass/fail standard.`;
+/* case studies — pull live values from the data by id */
+const AK=DATA.agentic_model_key, CK="claude-opus-4-8";
+const QBY=Object.fromEntries(DATA.questions.map(q=>[q.id,q]));
+function caseCard(id,kind,tag,title,note){
+  const q=QBY[id]; if(!q)return null;
+  const base=q.preds[CK]||{eccn:"—"}, ag=q.preds[AK]||{eccn:"—"};
+  const goodBase=base.grade>=1, goodAg=ag.grade>=1;
+  const c=el("div","case "+kind);
+  c.innerHTML=`<div class="tag">${tag}</div><h3>${title}</h3>
+    <div class="itm">${q.item_name} · gold <span class="mono">${q.gold}</span></div>
+    <div class="flow">
+      <span class="chip ${goodBase?'good':'bad'}">${base.eccn}</span><span class="arr">no-tool</span>
+      <span class="arr">→</span>
+      <span class="chip ${goodAg?'good':'bad'}">${ag.eccn}</span><span class="arr">+tools</span>
+    </div>
+    <div class="note">${note}</div>`;
+  return c;
 }
+const CASES=[
+  ["st-stm32f407vgt6","win","Recall win — catch-all","Found the entry it forgot existed",
+   "From memory the model calls a commodity microcontroller EAR99. Reading the category outline, it sees the anti-terrorism catch-all and the 25&nbsp;MHz clock threshold, and lands the exact subparagraph."],
+  ["nachi-7002cydup4","trap","Over-classification trap — beaten","Read the threshold, didn't over-control",
+   "A super-precision bearing baits the model toward a controlled materials-processing entry. With tools it reads that entry's actual limits, sees the bearing falls short, and correctly returns EAR99."],
+  ["microchip-lan8720a-cp-tr","limit","Tool-induced over-control","Reading a catch-all can backfire",
+   "An ordinary Ethernet PHY is EAR99. From memory the model gets that right — but reading the telecom catch-all tempts it to over-control to a networking entry. Giving the model more text is double-edged."],
+  ["lnd-2517-he3","limit","Niche control — still missed","Some answers aren't recall-shaped",
+   "A helium-3 neutron detector's control is obscure and hedged in its source. Tools don't surface it; both conditions return EAR99. The list helps when the answer is in it and findable."],
+];
+const cg=$("#caseGrid"); CASES.forEach(a=>{const c=caseCard(...a); if(c)cg.appendChild(c);});
 
-render();
+/* trap note */
+const trap=QBY["nachi-7002cydup4"];
+if(trap){$("#trapNote").innerHTML=`<b>The planted trap worked.</b> The Nachi super-precision bearing
+  (gold EAR99) was added as a deliberate over-classification lure. No-tool Claude took the bait
+  (<span class="mono">${(trap.preds[CK]||{}).eccn}</span>); with tools it read the controlling
+  thresholds and cleared it (<span class="mono">${(trap.preds[AK]||{}).eccn}</span>).`;}
+
+/* explorer */
+const CN=DATA.dataset.category_names;
+const fCat=$("#fCat"); fCat.appendChild(new Option("All categories","all"));
+Object.keys(DATA.dataset.by_category).sort((a,b)=>(a==="EAR99")-(b==="EAR99")||a.localeCompare(b))
+  .forEach(c=>fCat.appendChild(new Option(`${c} — ${CN[c]||c} (${DATA.dataset.by_category[c]})`,c)));
+const others=DATA.model_keys.filter(k=>k!==CK);
+$("#thA").textContent=DATA.model_meta[CK].name;
+$("#thB").textContent=DATA.model_meta[others[0]].name;
+$("#thC").textContent=DATA.model_meta[others[1]].name;
+function gchip(p){if(!p)return '<span class="muted">—</span>';
+  const c=p.error?"#7a3330":LEVELC[p.level]||"var(--t-none)";
+  const txt=p.error?"err":p.eccn;
+  return `<span class="eccn">${txt}</span> <span class="gchip" style="background:${c};color:#06121f">${f2(p.grade)}</span>`;}
+function renderQ(){
+  const cat=fCat.value, ver=$("#fVer").value, q=$("#fSearch").value.toLowerCase();
+  const body=$("#qbody"); body.innerHTML="";
+  DATA.questions.filter(x=>(cat==="all"||x.category===cat)
+      &&(ver==="all"||(ver==="ver")===x.verified)
+      &&(!q||x.item_name.toLowerCase().includes(q)||x.gold.toLowerCase().includes(q)||x.id.includes(q)))
+    .forEach(x=>{
+      const tr=el("tr","q");
+      tr.innerHTML=`<td class="item"><div class="nm">${x.item_name}${x.verified?'':'<span class="unver">new</span>'}</div><div class="id">${x.id} · cat ${x.category}</div></td>
+        <td class="eccn" style="color:var(--teal)">${x.gold}</td>
+        <td>${gchip(x.preds[CK])}</td><td class="hide-sm">${gchip(x.preds[others[0]])}</td>
+        <td class="hide-sm">${gchip(x.preds[others[1]])}</td>
+        <td>${gchip(x.preds[AK])}</td>`;
+      const det=el("tr","detail"); det.style.display="none";
+      const ag=x.preds[AK], calls=(ag&&ag.tool_calls)||[];
+      const trace=calls.map(c=>`<span class="tcall"><b>${c.tool}</b>${c.input&&Object.keys(c.input).length?` <span class="arg">${Object.values(c.input).join(", ")}</span>`:""}</span>`).join("");
+      det.innerHTML=`<td colspan="6"><div class="inner">
+        <div class="rsn"><span class="lbl">Agentic navigation — ${calls.length} CCL tool call${calls.length===1?"":"s"}</span></div>
+        <div class="trace">${trace||'<span class="muted">no tool calls recorded</span>'}</div>
+        <div class="rsn"><span class="lbl">Submitted reasoning</span>${(ag&&ag.reasoning)||"<span class='muted'>—</span>"}</div>
+      </div></td>`;
+      tr.addEventListener("click",()=>{const open=det.style.display!=="none";det.style.display=open?"none":"table-row";});
+      body.append(tr,det);
+    });
+}
+["change","input"].forEach(ev=>{fCat.addEventListener(ev,renderQ);$("#fVer").addEventListener(ev,renderQ);$("#fSearch").addEventListener(ev,renderQ);});
+renderQ();
+
+/* animations */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll("section,.reveal").forEach(s=>{s.classList.add("reveal");io.observe(s);});
+function fillBars(){document.querySelectorAll(".bar .fill").forEach(()=>{});
+  const hb=$("#heroInstr"); if(hb){const bars=hb.querySelectorAll(".bar .fill");
+    bars[0].style.width=(b0*100)+"%"; bars[1].style.width=(a0*100)+"%";}}
+setTimeout(fillBars,260);
 </script>
 </body>
 </html>
