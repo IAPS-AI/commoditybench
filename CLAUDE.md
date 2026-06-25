@@ -30,22 +30,28 @@ RAG over the CCL, evaluated with vs. without retrieval.
   **gpt-4o** 0.17 / 0.37 · **qwen3-32b** 0.04 / 0.16. NOT equalized (Claude/Qwen3 reason,
   GPT-4o at temp 0) — a capability snapshot, not a controlled ranking. Models over-classify
   (reach for controlled ECCNs on EAR99 items) and anchor on 3A001.
-- **Dashboard microsite:** `dashboard/index.html` (self-contained, data embedded, offline;
-  ranked leaderboard + per-model drill-down + grade ladder + computed insights). Regenerate
-  with `scripts/build_dashboard.py --summary results/<run>__summary.json`.
-- **Agentic CCL-navigation tooling: built + tested.** `commoditybench/ccl/` parses the
-  CCL from the eCFR into a navigable index and exposes it as tools the model calls
-  (`--agentic`). First within-model A/B on Claude Opus 4.8 (23 verified Qs) shows a large
-  lift from tools — exact 0.30→0.52, mean grade 0.45→0.60. See
-  `results/agentic_ab_findings.md` for the per-pattern breakdown (tools fix *recall*
-  failures like the 3A991/EAR99 catch-alls; they don't fix the *judgment* call of 5A002
-  vs. mass-market 5A992.c). Two loop-robustness bugs were found and fixed post-run; the
-  confirming re-run is **now unblocked** — Anthropic + OpenAI keys are in `.env` and verified
-  working this session.
-- **Not done:** sign-off on the 11 new candidates; Cat **0/4/6/8 still empty** (cutting the
-  non-visible Thorlabs lasers this session emptied Cat 6); equalized comparison; RAG index.
-  All cited accuracy is over the 23-verified set; keep the not-equalized / A-B-tool-lift
-  framing when citing.
+- **Results website (NEW): `dashboard/index.html`** via `scripts/build_site.py` (+
+  `site_template.html`). Self-contained/offline, swaggin export-control identity (ECCN
+  grade-ladder decoder; amber=controlled / teal=cleared). Shows BOTH the cross-model
+  leaderboard (no tools) AND the within-model tool lift, with All/Verified toggles,
+  per-category lift, "where tools break" case studies, and a per-item explorer that renders
+  the agent's CCL tool-trace. Regenerate: `scripts/build_site.py --crossmodel
+  results/expanded__summary.json --agentic results/expanded_agentic__summary.json`. (Old
+  single-run `build_dashboard.py` kept for one-off summaries.)
+- **Agentic CCL-navigation tooling: built, hardened, A/B'd on the full 34.** `commoditybench/ccl/`
+  parses the CCL from the eCFR (637 entries) into a navigable index + tools (`--agentic`).
+  Within-model lift on Claude Opus 4.8 over all 34: **exact 0.27→0.56, grade 0.41→0.64**
+  (verified-only grade 0.41→0.65), 0 errors. **Overfitting-hardened** (commit `b721a36`):
+  generic order-of-review prompt with no dataset ECCNs, de-exampled tool descriptions,
+  removed the catch-all search up-weight — and the lift held, generalized to the 11 new
+  categories added afterward, and beat a planted over-classification trap. Tools fix
+  *recall* gaps (catch-alls, thresholds) but not *judgment* calls; reading the 5A991 telecom
+  catch-all even induces over-control of EAR99 Ethernet PHYs (double-edged). Full write-up:
+  `results/agentic_ab_findings.md`. Runs: `expanded` (cross-model) + `expanded_agentic`.
+- **Not done:** sign-off on the 11 new candidates; Cat **0/4/6/8 still empty**; equalized
+  comparison; RAG index. Cross-model headline accuracy should still cite the 23-verified set;
+  keep the not-equalized / tool-lift framing. The expanded runs include unverified items (for
+  the site) and are flagged NOT CITABLE by the harness.
 
 ## Repo map
 

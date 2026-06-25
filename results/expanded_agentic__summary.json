@@ -1,0 +1,27 @@
+{
+  "run_id": "expanded_agentic",
+  "dataset": "data/questions.jsonl",
+  "n_questions": 34,
+  "verified_only": false,
+  "rag": false,
+  "agentic": true,
+  "workers": 4,
+  "citable": false,
+  "note": "NOT CITABLE: includes verified=false questions. Run with --verified-only for headline numbers.",
+  "models": [
+    {
+      "model": "claude-opus-4-8",
+      "n": 34,
+      "attempted": 34,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.5588,
+      "eccn_accuracy": 0.6176,
+      "group_accuracy": 0.7059,
+      "category_accuracy": 0.7353,
+      "parse_rate": 1.0,
+      "mean_grade": 0.6412,
+      "exact_accuracy_attempted": 0.5588
+    }
+  ]
+}
