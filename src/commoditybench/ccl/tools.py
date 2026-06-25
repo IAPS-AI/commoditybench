@@ -44,9 +44,9 @@ TOOL_SPECS: list[ToolSpec] = [
         description=(
             "List every ECCN in a category, grouped by product group (A-E), with each "
             "entry's title and reason for control. Entries flagged is_catchall (titled "
-            "'not controlled by ...', e.g. 3A991, 5A991, 5A992) are the basket entries "
-            "that capture items below the high-performance thresholds — always consider "
-            "them before concluding EAR99. Call this once you have a candidate category."
+            "'not controlled by ...') are basket entries that may describe items not "
+            "captured by the specific controls; an item is EAR99 only when no entry — "
+            "specific or catch-all — applies. Call this once you have a candidate category."
         ),
         input_schema={
             "type": "object",
@@ -66,8 +66,8 @@ TOOL_SPECS: list[ToolSpec] = [
             "Return the full controlling text of one ECCN entry: license requirements, "
             "reason for control, related controls, and the 'Items:' list with its "
             "subparagraphs and numeric thresholds. Use this to check whether the item "
-            "actually meets a candidate entry's parameters, and to pin the correct "
-            "subparagraph (e.g. 3A001.a.5.b.2). Accepts a head (3A001) or a full ECCN."
+            "actually meets a candidate entry's parameters, and to resolve the correct "
+            "subparagraph down to the matching leaf. Accepts a 5-char head or a full ECCN."
         ),
         input_schema={
             "type": "object",
@@ -84,10 +84,9 @@ TOOL_SPECS: list[ToolSpec] = [
     ToolSpec(
         name="search_ccl",
         description=(
-            "Keyword-search the CCL by a short description of the item or function "
-            "(e.g. 'mass market encryption module' or 'analog to digital converter "
-            "sample rate'). Returns candidate ECCN entries, including catch-alls, ranked "
-            "by relevance. Use when you are unsure which entry or category applies."
+            "Keyword-search the CCL by a short description of the item and its salient "
+            "specs. Returns candidate ECCN entries ranked by term overlap (no class is "
+            "favoured). Use when you are unsure which entry or category applies."
         ),
         input_schema={
             "type": "object",

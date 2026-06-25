@@ -142,9 +142,11 @@ class CCLIndex:
     def search(self, query: str, *, top_k: int = 8) -> list[dict]:
         """Keyword search over titles + body text, ranked by term overlap.
 
-        Deliberately simple (token-overlap, title-weighted) — the model supplies the
-        query and judges the hits; this just has to surface plausible entries, including
-        the catch-alls, without a vector store.
+        Deliberately simple (token-overlap, title-weighted) and *unbiased* — the model
+        supplies the query and judges the hits; this just surfaces plausible entries
+        verbatim from the CCL, without a vector store and without favouring any entry
+        class. (An earlier version up-weighted catch-alls; that was a thumb on the scale
+        toward this dataset's answers and has been removed.)
         """
         terms = _tokens(query)
         if not terms:
@@ -156,8 +158,6 @@ class CCLIndex:
             score = 3.0 * sum(t in title_toks for t in terms) + sum(
                 t in body_toks for t in terms
             )
-            if e.is_catchall:
-                score *= 1.05  # nudge catch-alls up; they're the easy-to-miss answers
             if score > 0:
                 scored.append((score, e))
         scored.sort(key=lambda s: (-s[0], s[1].eccn))
