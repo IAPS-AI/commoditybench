@@ -39,6 +39,14 @@ def tier(r: dict) -> str:
         return "B · Microchip"
     if "digikey" in h:
         return "B · Digi-Key"
+    if "lndinc" in h:
+        return "B · LND FAQ"
+    if "honeywellaerospace" in h:
+        return "B · Honeywell"
+    if "motion.com" in h or "powelltool" in h:
+        return "B · distributor"
+    if "pilotshq" in h:
+        return "C · templated"
     if "thorlabs" in h:
         return "C · not visible"
     return "?"
@@ -47,7 +55,7 @@ def tier(r: dict) -> str:
 def search_part(r: dict) -> str | None:
     """Tool-based sources (ADI/Microchip) need a part typed into a search box; pull it
     out of the note text where it was recorded as: search '<PART>'."""
-    m = re.search(r"search '([^']+)'", r.get("notes", ""))
+    m = re.search(r"search '([^']+)'", r.get("notes", ""), re.IGNORECASE)
     return m.group(1) if m else None
 
 
@@ -65,9 +73,11 @@ def verify_cell(r: dict) -> str:
         return f"[Microchip tool]({url}) → search `{part}`"
     if "digikey" in h:
         return f"[Digi-Key page]({url})"
+    if "lndinc" in h:
+        return f"[LND FAQ — ECCN-by-family]({url})"
     if "thorlabs" in h:
         return f"[page — ECCN not shown]({url})"
-    return f"[link]({url})"
+    return f"[page]({url})"
 
 
 def main() -> None:
