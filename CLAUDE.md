@@ -1,7 +1,9 @@
 # CLAUDE.md — working context for CommodityBench
 
 Read this first when starting a session on this repo. It captures current state and how
-to continue. (Repo: **IAPS-AI/commoditybench**, private. Maintainer: Maxwell, IAPS.)
+to continue. (Repo: **IAPS-AI/commoditybench**, **PUBLIC** as of 2026-06-26. Maintainer:
+Maxwell, IAPS.) **Live results site: https://iaps-ai.github.io/commoditybench/** (GitHub
+Pages, served from the `gh-pages` branch — see deploy note in Environment).
 
 ## What this is
 
@@ -11,8 +13,35 @@ Control List (CCL)**, the task BIS performs. Goal: quantify model capability as 
 possible IAPS recommendation about whether BIS should use LLMs for this. Stretch goal:
 RAG over the CCL, evaluated with vs. without retrieval.
 
-## Status (as of 2026-06-24)
+## Status (as of 2026-06-26)
 
+- **Frontier comparison + PUBLIC site (NEWEST, this session).** Closed the reviewer note
+  that round-1 used a non-frontier OpenAI model (GPT-4o) and a small open model (Qwen3-32B),
+  with tools only for Opus. Added **`gpt-5.5`** (OpenAI's strongest reasoning model on our
+  account; `reasoning_effort=high`) and **`qwen3-235b`** (Qwen3-235B-A22B-Instruct-2507, 4-bit
+  AWQ on a self-hosted vLLM endpoint), each run **no-tools AND agentic**. Pooled verified-23:
+  no-tools **GPT-5.5 0.565 grade / 0.391 exact** > Opus 4.5 0.517 > … > **Opus 4.8 0.416**
+  (5 runs) > GPT-4o 0.370 > Qwen3-32B 0.175; with-tools **GPT-5.5 0.661 ≳ Qwen3-235B 0.622 ≳
+  Opus 4.8 0.615**. Takeaways: GPT-5.5 is the strongest tested both unaided and tooled; a real
+  open-weight model (235B) matches/edges Opus 4.8; grounding (tools) is the lever, not scale,
+  and even the best tops out ~0.61 exact with the rules in hand. Writeup:
+  `results/frontier_comparison_findings.md`. Runs: `frontier`, `frontier_agentic`.
+- **Results website REBUILT around 3 sections** (`scripts/build_results_site.py` +
+  `aggregate_runs.py` + `results_template.html` → `dashboard/index.html`): (1) all-model
+  leaderboard tooled+untooled, (2) within-model tool uplift + per-category, (3) mistake
+  taxonomy (over/under-classification, wrong subparagraph/entry/category) with ECCN
+  segment-match example cards. **Aggregates across ALL 11 runs (483 obs)** per (model,
+  condition) to damp per-run noise. METR-clean, self-contained, no editorializing; opens with
+  an exec summary (task / benchmark / why it matters). The old `build_site.py` /
+  `build_dashboard.py` were REMOVED (superseded). Regenerate: `py -3.12 scripts/aggregate_runs.py
+  && py -3.12 scripts/build_results_site.py`.
+- **OpenAI adapter gained reasoning + agentic support.** `reasoning_effort` switches to the
+  GPT-5 surface (`max_completion_tokens`, no temperature). `OpenAIModel.classify_agentic` adds
+  the agentic CCL-navigation loop with **two transports**: the **Responses API** for GPT-5
+  reasoning models (which 400 on tools+reasoning over Chat Completions), and **Chat Completions**
+  for non-reasoning + open-weight vLLM/RunPod endpoints. So `--agentic` now works for GPT and
+  open-weight models, not just Anthropic. (Code-reviewed before the paid runs; two Responses-loop
+  bugs fixed — see git log. New global rule: review request/loop code before paid API runs.)
 - **Harness: done and tested.** ECCN parsing + graded scoring, provider adapters,
   concurrent eval runner, dataset loader/validator. **40 passing tests.** Tagged **`v1.0`**.
 - **Dataset: 34 questions** in `data/questions.jsonl` = **23 verified** (round-1, signed
@@ -30,14 +59,12 @@ RAG over the CCL, evaluated with vs. without retrieval.
   **gpt-4o** 0.17 / 0.37 · **qwen3-32b** 0.04 / 0.16. NOT equalized (Claude/Qwen3 reason,
   GPT-4o at temp 0) — a capability snapshot, not a controlled ranking. Models over-classify
   (reach for controlled ECCNs on EAR99 items) and anchor on 3A001.
-- **Results website (NEW): `dashboard/index.html`** via `scripts/build_site.py` (+
-  `site_template.html`). Self-contained/offline, swaggin export-control identity (ECCN
-  grade-ladder decoder; amber=controlled / teal=cleared). Shows BOTH the cross-model
-  leaderboard (no tools) AND the within-model tool lift, with All/Verified toggles,
-  per-category lift, "where tools break" case studies, and a per-item explorer that renders
-  the agent's CCL tool-trace. Regenerate: `scripts/build_site.py --crossmodel
-  results/expanded__summary.json --agentic results/expanded_agentic__summary.json`. (Old
-  single-run `build_dashboard.py` kept for one-off summaries.)
+- **(Superseded) earlier `build_site.py` results website** — amber/teal export-control
+  identity, cross-model leaderboard + tool-lift + an "across generations" METR timeline.
+  Replaced this session by the 3-section `build_results_site.py` site (see newest status
+  above); `build_site.py`/`site_template.html` were removed. Generations now live in the new
+  leaderboard (Opus 4.1→4.8 all appear); `dashboard/generation_trendline.html` remains as the
+  standalone trendline artifact.
 - **Agentic CCL-navigation tooling: built, hardened, A/B'd on the full 34.** `commoditybench/ccl/`
   parses the CCL from the eCFR (637 entries) into a navigable index + tools (`--agentic`).
   Within-model lift on Claude Opus 4.8 over all 34: **exact 0.27→0.56, grade 0.41→0.64**
@@ -56,16 +83,10 @@ RAG over the CCL, evaluated with vs. without retrieval.
   probe. **No-tools run done** (run-id `gen`, 23 verified, 0 errors): the trendline is
   **flat then dips** — exact 0.35→0.39 across 4.1–4.7, then **4.8 lowest at 0.22** (grade
   0.40); `group`/`category` steady ~0.57–0.61. Newer Opus isn't better at unaided ECCN
-  classification here; over-classification plausibly worsens it. **Tools (agentic) half
-  NOT done — API credits ran out mid-run** (billing 400s; failed outputs deleted). Trendline
-  page: `dashboard/generation_trendline.html` (shows a "tools pending" banner); builder
-  `scripts/build_generation_trendline.py`; writeup `results/generation_trendline_findings.md`.
-  **Now also folded into the main results website** (`scripts/build_site.py --generations`):
-  a new "02 · Across generations" section with a METR-style timeline (signature element — the
-  teal grade line vs. a dotted "if scale transferred" reference it conspicuously fails to
-  follow, plus a per-generation grade-ladder strip), and the hero reframed around the unified
-  thesis *the lever is grounding, not scale*. `dashboard/generation_trendline.html` is kept as
-  the standalone lightweight artifact.
+  classification here; over-classification plausibly worsens it. The 4.1→4.8 ladder now also
+  appears in the main leaderboard (pooled). Standalone trendline page:
+  `dashboard/generation_trendline.html`; builder `scripts/build_generation_trendline.py`;
+  writeup `results/generation_trendline_findings.md`.
 - **Subscription harness for the tools condition (NEW): `cc_harness/`.** Runs the agentic
   (read-the-CCL) condition through a **Claude Code session on a Max subscription** instead of
   burning API credits (the API agentic cross-gen run died on a credit wall). The folder is
@@ -93,8 +114,10 @@ src/commoditybench/
   prompts.py       # provider-agnostic prompt + answer JSON schema (+ optional RAG context)
   run_eval.py      # CLI: concurrent eval, scoring, aggregation, results
   models/          # base.py (interface + JSON parse/fallback + <think>-strip), registry.py,
-                   #   {anthropic,openai,gemini}_model.py — openai_model.py also drives any
-                   #   OpenAI-compatible endpoint (RunPod/vLLM/Ollama): qwen3-32b is registered there
+                   #   agentic.py (shared agentic prompt/submit-tool), {anthropic,openai,gemini}_model.py.
+                   #   openai_model.py drives OpenAI GPT (incl. reasoning models via reasoning_effort)
+                   #   AND any OpenAI-compatible endpoint (RunPod/vLLM): qwen3-32b, qwen3-235b, gpt-5.5.
+                   #   Both anthropic_model and openai_model implement classify_agentic (--agentic).
   ccl/             # AGENTIC condition: parsed CCL + navigation tools the model calls
                    #   parse_ecfr.py (eCFR XML -> ccl_index.json), index.py (CCLIndex:
                    #   category_outline/read/search), tools.py (tool specs + CCLToolbox)
@@ -112,10 +135,12 @@ human-review-sources/    # purchase invoices used as provenance (committed)
 scripts/
   build_dataset.py # validate <file> | template
   make_worksheet.py# regenerate data/verification_worksheet.md from questions.jsonl
-  build_site.py + site_template.html      # CURRENT results website: cross-model + tool-lift,
-                   #   ingests TWO runs (expanded + expanded_agentic) -> dashboard/index.html
-  build_dashboard.py + dashboard_template.html  # legacy single-run microsite (one summary)
-dashboard/index.html     # generated results website (committed; embeds both runs' data)
+  aggregate_runs.py        # pool ALL runs per (model, condition) -> dashboard/site_data.json
+  build_results_site.py + results_template.html  # CURRENT 3-section site (leaderboard /
+                   #   uplift / mistakes) from site_data.json -> dashboard/index.html
+  build_generation_trendline.py  # standalone METR trendline -> dashboard/generation_trendline.html
+  grade_cc_runs.py # grade the cc_harness (subscription) answers vs the no-tools gen baseline
+dashboard/index.html     # generated results website (committed); also published to gh-pages
 tests/             # pytest (eccn scoring + aggregation math + parser/<think>-strip)
 ```
 
@@ -128,17 +153,19 @@ py -3.12 scripts/make_worksheet.py                            # regen worksheet 
 # Eval (needs provider SDKs + API keys in .env): pip install -e ".[all]"
 PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
   --models claude-opus-4-8 --verified-only --workers 8
-# Multi-model comparison (incl. open-weight Qwen3-32B on RunPod; needs RUNPOD_API_KEY):
+# Multi-model comparison (frontier OpenAI + open-weight; needs OPENAI_API_KEY/RUNPOD_API_KEY).
+# qwen3-235b needs a running vLLM endpoint: set QWEN3_235B_BASE_URL (see Environment).
 PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
-  --models claude-opus-4-8 gpt-4o qwen3-32b --verified-only --workers 8 --run-id comparison
-PYTHONPATH=src py -3.12 scripts/build_dashboard.py --summary results/comparison__summary.json
-# AGENTIC condition (Claude only): model navigates the CCL via tools before answering.
+  --models claude-opus-4-8 gpt-5.5 qwen3-235b --verified-only --workers 6 --run-id frontier
+# AGENTIC condition (Anthropic + OpenAI/OpenAI-compatible): model reads the CCL via tools first.
 PYTHONPATH=src py -3.12 -m commoditybench.run_eval --dataset data/questions.jsonl \
-  --models claude-opus-4-8 --agentic --workers 4 --run-id expanded_agentic
-# Build the results WEBSITE (cross-model + tool-lift + across-generations timeline):
-PYTHONPATH=src py -3.12 scripts/build_site.py \
-  --crossmodel results/expanded__summary.json --agentic results/expanded_agentic__summary.json \
-  --generations results/gen__summary.json   # --generations optional; section hides if absent
+  --models claude-opus-4-8 gpt-5.5 qwen3-235b --agentic --workers 4 --run-id frontier_agentic
+# Build the results WEBSITE (aggregates ALL runs; pool first, then build):
+PYTHONPATH=src py -3.12 scripts/aggregate_runs.py
+PYTHONPATH=src py -3.12 scripts/build_results_site.py
+# Redeploy the site to GitHub Pages (after rebuilding dashboard/):
+git add -A && git commit -m "..." && git push origin main
+git push -f origin "$(git subtree split --prefix dashboard main)":refs/heads/gh-pages
 # Rebuild the CCL index from the eCFR (already committed; only if it needs refreshing):
 PYTHONPATH=src py -3.12 -m commoditybench.ccl.parse_ecfr --fetch
 ```
@@ -190,12 +217,11 @@ table links each item to its source (with the part to search for tool-based sour
    keep first. The agentic explorer on the site is a fast spot-check aid: the parts where
    tools went *wrong* (`lnd-2311-b10`, the two Piper items) may be tool errors OR bad labels.
    Then re-run `expanded` + `expanded_agentic` and rebuild the site on the larger verified set.
-2. **DONE this session — agentic tooling complete.** Built + overfitting-hardened + A/B'd on
-   the full 34 (exact 0.27→0.56, grade 0.41→0.64; lift generalizes to the new categories and
-   survives a generic prompt). Results website built (`scripts/build_site.py`). See
-   `results/agentic_ab_findings.md`. Remaining tool ideas if revisited: a precision guardrail
-   for the 5A991 telecom over-control (double-edged finding), and add the agentic condition to
-   gpt-4o/qwen3 (only the Anthropic adapter has `classify_agentic`).
+2. **DONE — agentic tooling + cross-vendor comparison complete.** Agentic A/B (Opus 4.8
+   exact 0.27→0.56) plus the frontier comparison (GPT-5.5, Qwen3-235B in both conditions; see
+   newest status). The OpenAI/OpenAI-compatible adapter now has `classify_agentic`, so GPT and
+   open-weight models get tools too. Remaining tool idea if revisited: a precision guardrail
+   for the 5A991 telecom over-control (double-edged finding).
 3. **Backfill still-empty categories 0/4/6/8.** Cat 6 regressed to empty (Thorlabs lasers
    cut) — re-source via DRS Infrared/Pelco (thermal cameras, 6A003) per the sourcing map.
    Cat 4 = Apple/HP/Oracle ECCN matrices; Cat 8 (marine) has few public sources. Cat 0 has
@@ -209,9 +235,12 @@ table links each item to its source (with the part to search for tool-based sour
 
 ## Open issues / flags
 
-- **Provider comparability is NOT equalized**: Claude & Qwen3 run with reasoning on;
-  GPT-4o at temp=0. The `comparison` run and the dashboard are explicitly labeled a
-  capability snapshot, not a ranking. Decide before any head-to-head claim.
+- **Provider comparability is NOT equalized**: each model runs in its strongest native
+  config (Claude/GPT-5.5/Qwen3 with reasoning on; GPT-4o at temp=0). The site/findings are
+  labeled a capability snapshot, not a controlled ranking. Decide before any head-to-head claim.
+- **Qwen3-235B agentic has 1/34 unscored** (the Piper Cat-9 item's tool context exceeds the
+  41k window; also weakest provenance) — counted as 0. Lower the agentic output budget or raise
+  MAX_MODEL_LEN to recover it.
 - **New-candidate provenance caveats** (carry into sign-off): LND ECCNs are family-level
   (per-part `1C232` unconfirmed); the Oberdorfer `2B999.j` lives in a distributor product-
   name string, not a dedicated field; the Piper `9A991.d` pair looks distributor-templated.
@@ -220,6 +249,22 @@ table links each item to its source (with the part to search for tool-based sour
 
 ## Environment / tooling
 
+- **Repo is PUBLIC** (`IAPS-AI/commoditybench`). The results site is deployed to **GitHub
+  Pages** at https://iaps-ai.github.io/commoditybench/ from the **`gh-pages`** branch (the
+  `dashboard/` folder published at root via subtree split). Redeploy after a site rebuild:
+  `git push -f origin "$(git subtree split --prefix dashboard main)":refs/heads/gh-pages`
+  (Pages auto-rebuilds; ~1–2 min). Before any visibility/exposure change, scan for secrets
+  (`.env` is gitignored; no keys are tracked).
+- **Qwen3-235B endpoint is ephemeral.** `registry.py` reads it from `QWEN3_235B_BASE_URL`
+  (placeholder default). To run `qwen3-235b`, deploy a vLLM endpoint for
+  `QuantTrio/Qwen3-235B-A22B-Instruct-2507-AWQ` (TP=2 ~2×H100; `--enable-auto-tool-choice
+  --tool-call-parser hermes`; `MAX_MODEL_LEN ≥ 40960`, but agentic tool-heavy items can still
+  exceed it — lower the per-call output budget) and set the env var. RunPod **serverless**
+  wedged under sustained agentic load (worker won't drain its queue); use a **dedicated pod**
+  for agentic batches and **tear it down after** (it bills continuously, ~$6.6/hr for 2×H100).
+- **Run a local code review before paid API runs** (global rule
+  `~/.claude/rules/code-review-before-paid-api.md`): review request/loop code and fix
+  confirmed correctness bugs before spending on LLM/GPU runs. A cheap smoke test first is fine.
 - `gh` authed as `maxwell-k-roberts` with access to `IAPS-AI`. Commit on a branch or main;
   end commit messages with `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
 - Python: `py -3.12`. For PDFs use the Read tool; for blocked/JS pages use
