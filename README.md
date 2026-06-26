@@ -9,6 +9,9 @@ Built by the [Institute for AI Policy and Strategy (IAPS)](https://www.iaps.ai/)
 quantify how capable current closed- and open-source models are at this task, as input
 to the question of whether BIS should adopt LLM assistance for classification.
 
+📊 **[Live results site →](https://iaps-ai.github.io/commoditybench/)** — the cross-model
+leaderboard (tooled + untooled), within-model tool uplift, and mistake taxonomy.
+
 > **Status: early scaffold + candidate dataset.** The evaluation harness, ECCN scoring,
 > and model adapters are implemented and tested. A first batch of **29 candidate
 > questions** ([`data/questions.jsonl`](data/questions.jsonl)) has been sourced from
