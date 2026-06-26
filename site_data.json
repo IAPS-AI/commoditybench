@@ -1,0 +1,826 @@
+{
+  "leaderboard": {
+    "baseline": [
+      {
+        "model": "gpt-5.5",
+        "name": "GPT-5.5",
+        "vendor": "OpenAI",
+        "weight": "closed",
+        "date": "2026-04-23",
+        "exact": 0.3913,
+        "grade": 0.5652,
+        "eccn": 0.5652,
+        "group": 0.6957,
+        "category": 0.6957,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "frontier"
+        ],
+        "run_grades": [
+          0.5652
+        ],
+        "grade_min": 0.5652,
+        "grade_max": 0.5652
+      },
+      {
+        "model": "claude-opus-4-5",
+        "name": "Claude Opus 4.5",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2025-11-24",
+        "exact": 0.3913,
+        "grade": 0.5174,
+        "eccn": 0.5217,
+        "group": 0.6087,
+        "category": 0.6087,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "gen"
+        ],
+        "run_grades": [
+          0.5174
+        ],
+        "grade_min": 0.5174,
+        "grade_max": 0.5174
+      },
+      {
+        "model": "claude-opus-4-6",
+        "name": "Claude Opus 4.6",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2026-02-04",
+        "exact": 0.3913,
+        "grade": 0.5043,
+        "eccn": 0.4783,
+        "group": 0.6087,
+        "category": 0.6087,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "gen"
+        ],
+        "run_grades": [
+          0.5043
+        ],
+        "grade_min": 0.5043,
+        "grade_max": 0.5043
+      },
+      {
+        "model": "claude-opus-4-7",
+        "name": "Claude Opus 4.7",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2026-04-14",
+        "exact": 0.3913,
+        "grade": 0.487,
+        "eccn": 0.4783,
+        "group": 0.5652,
+        "category": 0.5652,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "gen"
+        ],
+        "run_grades": [
+          0.487
+        ],
+        "grade_min": 0.487,
+        "grade_max": 0.487
+      },
+      {
+        "model": "claude-opus-4-1",
+        "name": "Claude Opus 4.1",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2025-08-05",
+        "exact": 0.3478,
+        "grade": 0.4609,
+        "eccn": 0.4348,
+        "group": 0.5652,
+        "category": 0.5652,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "gen"
+        ],
+        "run_grades": [
+          0.4609
+        ],
+        "grade_min": 0.4609,
+        "grade_max": 0.4609
+      },
+      {
+        "model": "qwen3-235b",
+        "name": "Qwen3-235B-A22B",
+        "vendor": "Alibaba",
+        "weight": "open",
+        "date": "2025-07-21",
+        "exact": 0.2609,
+        "grade": 0.4391,
+        "eccn": 0.3913,
+        "group": 0.6087,
+        "category": 0.6087,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "frontier"
+        ],
+        "run_grades": [
+          0.4391
+        ],
+        "grade_min": 0.4391,
+        "grade_max": 0.4391
+      },
+      {
+        "model": "claude-opus-4-8",
+        "name": "Claude Opus 4.8",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2026-05-28",
+        "exact": 0.2609,
+        "grade": 0.4165,
+        "eccn": 0.3739,
+        "group": 0.5652,
+        "category": 0.5652,
+        "n_items": 23,
+        "n_runs": 5,
+        "n_obs": 115,
+        "mean_tool_calls": 0,
+        "runs": [
+          "ab_baseline",
+          "ab2_baseline",
+          "comparison",
+          "expanded",
+          "gen"
+        ],
+        "run_grades": [
+          0.4478,
+          0.3913,
+          0.4391,
+          0.4087,
+          0.3957
+        ],
+        "grade_min": 0.3913,
+        "grade_max": 0.4478
+      },
+      {
+        "model": "gpt-4o",
+        "name": "GPT-4o",
+        "vendor": "OpenAI",
+        "weight": "closed",
+        "date": "2024-05-13",
+        "exact": 0.1739,
+        "grade": 0.3696,
+        "eccn": 0.3043,
+        "group": 0.5652,
+        "category": 0.5652,
+        "n_items": 23,
+        "n_runs": 2,
+        "n_obs": 46,
+        "mean_tool_calls": 0,
+        "runs": [
+          "comparison",
+          "expanded"
+        ],
+        "run_grades": [
+          0.3696,
+          0.3696
+        ],
+        "grade_min": 0.3696,
+        "grade_max": 0.3696
+      },
+      {
+        "model": "qwen3-32b",
+        "name": "Qwen3-32B",
+        "vendor": "Alibaba",
+        "weight": "open",
+        "date": "2025-04-28",
+        "exact": 0.0435,
+        "grade": 0.1754,
+        "eccn": 0.1159,
+        "group": 0.3188,
+        "category": 0.3188,
+        "n_items": 23,
+        "n_runs": 3,
+        "n_obs": 69,
+        "mean_tool_calls": 0,
+        "runs": [
+          "comparison",
+          "expanded",
+          "qwen3_32b_runpod"
+        ],
+        "run_grades": [
+          0.1609,
+          0.1478,
+          0.2174
+        ],
+        "grade_min": 0.1478,
+        "grade_max": 0.2174
+      }
+    ],
+    "agentic": [
+      {
+        "model": "gpt-5.5",
+        "name": "GPT-5.5",
+        "vendor": "OpenAI",
+        "weight": "closed",
+        "date": "2026-04-23",
+        "exact": 0.6087,
+        "grade": 0.6609,
+        "eccn": 0.6087,
+        "group": 0.7391,
+        "category": 0.7391,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 9.7,
+        "runs": [
+          "frontier_agentic"
+        ],
+        "run_grades": [
+          0.6609
+        ],
+        "grade_min": 0.6609,
+        "grade_max": 0.6609
+      },
+      {
+        "model": "qwen3-235b",
+        "name": "Qwen3-235B-A22B",
+        "vendor": "Alibaba",
+        "weight": "open",
+        "date": "2025-07-21",
+        "exact": 0.4783,
+        "grade": 0.6217,
+        "eccn": 0.6087,
+        "group": 0.7391,
+        "category": 0.7391,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 6.9,
+        "runs": [
+          "frontier_agentic"
+        ],
+        "run_grades": [
+          0.6217
+        ],
+        "grade_min": 0.6217,
+        "grade_max": 0.6217
+      },
+      {
+        "model": "claude-opus-4-8",
+        "name": "Claude Opus 4.8",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2026-05-28",
+        "exact": 0.5217,
+        "grade": 0.6145,
+        "eccn": 0.5797,
+        "group": 0.7101,
+        "category": 0.7101,
+        "n_items": 23,
+        "n_runs": 3,
+        "n_obs": 69,
+        "mean_tool_calls": 4.7,
+        "runs": [
+          "ab_agentic",
+          "ab2_agentic",
+          "expanded_agentic"
+        ],
+        "run_grades": [
+          0.6043,
+          0.5913,
+          0.6478
+        ],
+        "grade_min": 0.5913,
+        "grade_max": 0.6478
+      }
+    ]
+  },
+  "uplift": [
+    {
+      "model": "gpt-5.5",
+      "name": "GPT-5.5",
+      "vendor": "OpenAI",
+      "weight": "closed",
+      "baseline": {
+        "model": "gpt-5.5",
+        "name": "GPT-5.5",
+        "vendor": "OpenAI",
+        "weight": "closed",
+        "date": "2026-04-23",
+        "exact": 0.3913,
+        "grade": 0.5652,
+        "eccn": 0.5652,
+        "group": 0.6957,
+        "category": 0.6957,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "frontier"
+        ],
+        "run_grades": [
+          0.5652
+        ],
+        "grade_min": 0.5652,
+        "grade_max": 0.5652
+      },
+      "agentic": {
+        "model": "gpt-5.5",
+        "name": "GPT-5.5",
+        "vendor": "OpenAI",
+        "weight": "closed",
+        "date": "2026-04-23",
+        "exact": 0.6087,
+        "grade": 0.6609,
+        "eccn": 0.6087,
+        "group": 0.7391,
+        "category": 0.7391,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 9.7,
+        "runs": [
+          "frontier_agentic"
+        ],
+        "run_grades": [
+          0.6609
+        ],
+        "grade_min": 0.6609,
+        "grade_max": 0.6609
+      },
+      "per_category": [
+        {
+          "category": "3",
+          "name": "Electronics",
+          "n_base": 5,
+          "n_ag": 5,
+          "baseline": 0.88,
+          "agentic": 1.0
+        },
+        {
+          "category": "5",
+          "name": "Telecom & Info-Security",
+          "n_base": 10,
+          "n_ag": 10,
+          "baseline": 0.56,
+          "agentic": 0.62
+        },
+        {
+          "category": "EAR99",
+          "name": "EAR99 (not listed)",
+          "n_base": 8,
+          "n_ag": 8,
+          "baseline": 0.375,
+          "agentic": 0.5
+        }
+      ]
+    },
+    {
+      "model": "qwen3-235b",
+      "name": "Qwen3-235B-A22B",
+      "vendor": "Alibaba",
+      "weight": "open",
+      "baseline": {
+        "model": "qwen3-235b",
+        "name": "Qwen3-235B-A22B",
+        "vendor": "Alibaba",
+        "weight": "open",
+        "date": "2025-07-21",
+        "exact": 0.2609,
+        "grade": 0.4391,
+        "eccn": 0.3913,
+        "group": 0.6087,
+        "category": 0.6087,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 0,
+        "runs": [
+          "frontier"
+        ],
+        "run_grades": [
+          0.4391
+        ],
+        "grade_min": 0.4391,
+        "grade_max": 0.4391
+      },
+      "agentic": {
+        "model": "qwen3-235b",
+        "name": "Qwen3-235B-A22B",
+        "vendor": "Alibaba",
+        "weight": "open",
+        "date": "2025-07-21",
+        "exact": 0.4783,
+        "grade": 0.6217,
+        "eccn": 0.6087,
+        "group": 0.7391,
+        "category": 0.7391,
+        "n_items": 23,
+        "n_runs": 1,
+        "n_obs": 23,
+        "mean_tool_calls": 6.9,
+        "runs": [
+          "frontier_agentic"
+        ],
+        "run_grades": [
+          0.6217
+        ],
+        "grade_min": 0.6217,
+        "grade_max": 0.6217
+      },
+      "per_category": [
+        {
+          "category": "3",
+          "name": "Electronics",
+          "n_base": 5,
+          "n_ag": 5,
+          "baseline": 0.58,
+          "agentic": 0.88
+        },
+        {
+          "category": "5",
+          "name": "Telecom & Info-Security",
+          "n_base": 10,
+          "n_ag": 10,
+          "baseline": 0.32,
+          "agentic": 0.19
+        },
+        {
+          "category": "EAR99",
+          "name": "EAR99 (not listed)",
+          "n_base": 8,
+          "n_ag": 8,
+          "baseline": 0.5,
+          "agentic": 1.0
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-4-8",
+      "name": "Claude Opus 4.8",
+      "vendor": "Anthropic",
+      "weight": "closed",
+      "baseline": {
+        "model": "claude-opus-4-8",
+        "name": "Claude Opus 4.8",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2026-05-28",
+        "exact": 0.2609,
+        "grade": 0.4165,
+        "eccn": 0.3739,
+        "group": 0.5652,
+        "category": 0.5652,
+        "n_items": 23,
+        "n_runs": 5,
+        "n_obs": 115,
+        "mean_tool_calls": 0,
+        "runs": [
+          "ab_baseline",
+          "ab2_baseline",
+          "comparison",
+          "expanded",
+          "gen"
+        ],
+        "run_grades": [
+          0.4478,
+          0.3913,
+          0.4391,
+          0.4087,
+          0.3957
+        ],
+        "grade_min": 0.3913,
+        "grade_max": 0.4478
+      },
+      "agentic": {
+        "model": "claude-opus-4-8",
+        "name": "Claude Opus 4.8",
+        "vendor": "Anthropic",
+        "weight": "closed",
+        "date": "2026-05-28",
+        "exact": 0.5217,
+        "grade": 0.6145,
+        "eccn": 0.5797,
+        "group": 0.7101,
+        "category": 0.7101,
+        "n_items": 23,
+        "n_runs": 3,
+        "n_obs": 69,
+        "mean_tool_calls": 4.7,
+        "runs": [
+          "ab_agentic",
+          "ab2_agentic",
+          "expanded_agentic"
+        ],
+        "run_grades": [
+          0.6043,
+          0.5913,
+          0.6478
+        ],
+        "grade_min": 0.5913,
+        "grade_max": 0.6478
+      },
+      "per_category": [
+        {
+          "category": "3",
+          "name": "Electronics",
+          "n_base": 25,
+          "n_ag": 15,
+          "baseline": 0.28,
+          "agentic": 0.92
+        },
+        {
+          "category": "5",
+          "name": "Telecom & Info-Security",
+          "n_base": 50,
+          "n_ag": 30,
+          "baseline": 0.318,
+          "agentic": 0.453
+        },
+        {
+          "category": "EAR99",
+          "name": "EAR99 (not listed)",
+          "n_base": 40,
+          "n_ag": 24,
+          "baseline": 0.625,
+          "agentic": 0.625
+        }
+      ]
+    }
+  ],
+  "taxonomy": {
+    "baseline": [
+      {
+        "model": "claude-opus-4-7",
+        "n_items": 23,
+        "counts": {
+          "correct": 9.0,
+          "over_control": 2.0,
+          "under_control": 4.0,
+          "wrong_subparagraph": 2.0,
+          "wrong_entry": 2.0,
+          "wrong_control": 0.0,
+          "wrong_category": 4.0,
+          "no_answer": 0.0
+        },
+        "name": "Claude Opus 4.7",
+        "vendor": "Anthropic",
+        "weight": "closed"
+      },
+      {
+        "model": "claude-opus-4-6",
+        "n_items": 23,
+        "counts": {
+          "correct": 9.0,
+          "over_control": 0.0,
+          "under_control": 6.0,
+          "wrong_subparagraph": 2.0,
+          "wrong_entry": 3.0,
+          "wrong_control": 0.0,
+          "wrong_category": 3.0,
+          "no_answer": 0.0
+        },
+        "name": "Claude Opus 4.6",
+        "vendor": "Anthropic",
+        "weight": "closed"
+      },
+      {
+        "model": "claude-opus-4-5",
+        "n_items": 23,
+        "counts": {
+          "correct": 9.0,
+          "over_control": 0.0,
+          "under_control": 9.0,
+          "wrong_subparagraph": 3.0,
+          "wrong_entry": 2.0,
+          "wrong_control": 0.0,
+          "wrong_category": 0.0,
+          "no_answer": 0.0
+        },
+        "name": "Claude Opus 4.5",
+        "vendor": "Anthropic",
+        "weight": "closed"
+      },
+      {
+        "model": "claude-opus-4-1",
+        "n_items": 23,
+        "counts": {
+          "correct": 8.0,
+          "over_control": 0.0,
+          "under_control": 8.0,
+          "wrong_subparagraph": 2.0,
+          "wrong_entry": 3.0,
+          "wrong_control": 0.0,
+          "wrong_category": 2.0,
+          "no_answer": 0.0
+        },
+        "name": "Claude Opus 4.1",
+        "vendor": "Anthropic",
+        "weight": "closed"
+      },
+      {
+        "model": "gpt-4o",
+        "n_items": 23,
+        "counts": {
+          "correct": 4.0,
+          "over_control": 6.0,
+          "under_control": 1.0,
+          "wrong_subparagraph": 3.0,
+          "wrong_entry": 6.0,
+          "wrong_control": 0.0,
+          "wrong_category": 3.0,
+          "no_answer": 0.0
+        },
+        "name": "GPT-4o",
+        "vendor": "OpenAI",
+        "weight": "closed"
+      },
+      {
+        "model": "qwen3-32b",
+        "n_items": 23,
+        "counts": {
+          "correct": 1.0,
+          "over_control": 6.667,
+          "under_control": 0.0,
+          "wrong_subparagraph": 1.667,
+          "wrong_entry": 4.667,
+          "wrong_control": 0.0,
+          "wrong_category": 8.667,
+          "no_answer": 0.333
+        },
+        "name": "Qwen3-32B",
+        "vendor": "Alibaba",
+        "weight": "open"
+      },
+      {
+        "model": "qwen3-235b",
+        "n_items": 23,
+        "counts": {
+          "correct": 6.0,
+          "over_control": 4.0,
+          "under_control": 1.0,
+          "wrong_subparagraph": 3.0,
+          "wrong_entry": 5.0,
+          "wrong_control": 0.0,
+          "wrong_category": 4.0,
+          "no_answer": 0.0
+        },
+        "name": "Qwen3-235B-A22B",
+        "vendor": "Alibaba",
+        "weight": "open"
+      },
+      {
+        "model": "claude-opus-4-8",
+        "n_items": 23,
+        "counts": {
+          "correct": 6.0,
+          "over_control": 3.0,
+          "under_control": 4.8,
+          "wrong_subparagraph": 2.6,
+          "wrong_entry": 4.4,
+          "wrong_control": 0.0,
+          "wrong_category": 2.2,
+          "no_answer": 0.0
+        },
+        "name": "Claude Opus 4.8",
+        "vendor": "Anthropic",
+        "weight": "closed"
+      },
+      {
+        "model": "gpt-5.5",
+        "n_items": 23,
+        "counts": {
+          "correct": 9.0,
+          "over_control": 5.0,
+          "under_control": 0.0,
+          "wrong_subparagraph": 4.0,
+          "wrong_entry": 3.0,
+          "wrong_control": 0.0,
+          "wrong_category": 2.0,
+          "no_answer": 0.0
+        },
+        "name": "GPT-5.5",
+        "vendor": "OpenAI",
+        "weight": "closed"
+      }
+    ],
+    "agentic": [
+      {
+        "model": "gpt-5.5",
+        "n_items": 23,
+        "counts": {
+          "correct": 14.0,
+          "over_control": 4.0,
+          "under_control": 0.0,
+          "wrong_subparagraph": 0.0,
+          "wrong_entry": 3.0,
+          "wrong_control": 0.0,
+          "wrong_category": 2.0,
+          "no_answer": 0.0
+        },
+        "name": "GPT-5.5",
+        "vendor": "OpenAI",
+        "weight": "closed"
+      },
+      {
+        "model": "qwen3-235b",
+        "n_items": 23,
+        "counts": {
+          "correct": 11.0,
+          "over_control": 0.0,
+          "under_control": 3.0,
+          "wrong_subparagraph": 3.0,
+          "wrong_entry": 3.0,
+          "wrong_control": 0.0,
+          "wrong_category": 3.0,
+          "no_answer": 0.0
+        },
+        "name": "Qwen3-235B-A22B",
+        "vendor": "Alibaba",
+        "weight": "open"
+      },
+      {
+        "model": "claude-opus-4-8",
+        "n_items": 23,
+        "counts": {
+          "correct": 12.0,
+          "over_control": 2.667,
+          "under_control": 0.333,
+          "wrong_subparagraph": 1.333,
+          "wrong_entry": 3.0,
+          "wrong_control": 0.0,
+          "wrong_category": 3.0,
+          "no_answer": 0.667
+        },
+        "name": "Claude Opus 4.8",
+        "vendor": "Anthropic",
+        "weight": "closed"
+      }
+    ]
+  },
+  "mistake_order": [
+    "correct",
+    "over_control",
+    "under_control",
+    "wrong_subparagraph",
+    "wrong_entry",
+    "wrong_control",
+    "wrong_category",
+    "no_answer"
+  ],
+  "mistake_label": {
+    "correct": "Correct",
+    "over_control": "Over-classified (EAR99 \u2192 controlled)",
+    "under_control": "Under-classified (controlled \u2192 EAR99)",
+    "wrong_subparagraph": "Right ECCN, wrong subparagraph",
+    "wrong_entry": "Right group, wrong entry",
+    "wrong_control": "Right category, wrong control",
+    "wrong_category": "Wrong category",
+    "no_answer": "No parseable answer"
+  },
+  "category_names": {
+    "0": "Nuclear",
+    "1": "Materials & Chemicals",
+    "2": "Materials Processing",
+    "3": "Electronics",
+    "4": "Computers",
+    "5": "Telecom & Info-Security",
+    "6": "Sensors & Lasers",
+    "7": "Navigation & Avionics",
+    "8": "Marine",
+    "9": "Aerospace & Propulsion",
+    "EAR99": "EAR99 (not listed)"
+  },
+  "baseline_runs": [
+    "ab_baseline",
+    "ab2_baseline",
+    "comparison",
+    "expanded",
+    "gen",
+    "qwen3_32b_runpod",
+    "frontier"
+  ],
+  "agentic_runs": [
+    "ab_agentic",
+    "ab2_agentic",
+    "expanded_agentic",
+    "frontier_agentic"
+  ]
+}
