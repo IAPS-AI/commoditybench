@@ -7,9 +7,19 @@ strings — update them as providers ship new versions.
 
 from __future__ import annotations
 
+import os
 from typing import Callable
 
 from .base import ClassifierModel
+
+# Endpoint for the self-hosted Qwen3-235B vLLM server. It is account/deploy-specific and
+# ephemeral (a RunPod pod or serverless endpoint that gets torn down to stop GPU billing),
+# so it is read from the environment rather than hard-coded. Set QWEN3_235B_BASE_URL to a
+# running OpenAI-compatible endpoint (launched with --enable-auto-tool-choice
+# --tool-call-parser hermes) before running the qwen3-235b model.
+QWEN3_235B_BASE_URL = os.environ.get(
+    "QWEN3_235B_BASE_URL", "https://api.runpod.ai/v2/REPLACE_WITH_ENDPOINT_ID/openai/v1"
+)
 
 
 def _anthropic(model_id: str, **kw) -> Callable[[], ClassifierModel]:
@@ -101,12 +111,11 @@ _REGISTRY: dict[str, Callable[[str], ClassifierModel]] = {
     # launched with --enable-auto-tool-choice + the hermes tool parser so it gets the same
     # --agentic CCL tools as Opus 4.8 (via OpenAIModel.classify_agentic chat-completions
     # loop). This is the Instruct (NON-thinking) variant, so no <think> trace; sampling
-    # follows the model card (temp 0.7 / top_p 0.8 / top_k 20). The base_url's endpoint id
-    # is account-specific — re-deploy and update if the endpoint is torn down (deploy
-    # recorded in the session scratchpad; tear down after runs to stop GPU billing).
+    # follows the model card (temp 0.7 / top_p 0.8 / top_k 20). The endpoint is ephemeral;
+    # set QWEN3_235B_BASE_URL (see above) to your running vLLM endpoint before use.
     "qwen3-235b": _openai(
         "QuantTrio/Qwen3-235B-A22B-Instruct-2507-AWQ",
-        base_url="https://api.runpod.ai/v2/ev2xl0fh8trdj1/openai/v1",
+        base_url=QWEN3_235B_BASE_URL,
         api_key_env="RUNPOD_API_KEY",
         structured="none",
         temperature=0.7,

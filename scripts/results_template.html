@@ -44,6 +44,14 @@ section{padding:54px 0;border-bottom:1px solid var(--rule)}
 .secsub{color:var(--muted);max-width:680px;margin:0 0 30px;font-size:14.5px}
 .note{font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.02em}
 
+/* executive summary */
+section#overview{padding:40px 0}
+.ovgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.ovcol .ovk{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tool);margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid var(--rule)}
+.ovcol p{font-size:14px;color:var(--muted);line-height:1.6}
+.ovcol p b{color:var(--ink);font-weight:600}
+@media(max-width:680px){.ovgrid{grid-template-columns:1fr;gap:24px}}
+
 /* ---- chart primitives ---- */
 .chart{background:var(--panel);border:1px solid var(--rule);padding:24px 26px 18px}
 .legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:6px}
@@ -158,6 +166,23 @@ footer .mono{font-size:11px;color:var(--faint)}
   <p class="def">Can language models assign a commodity its correct <b>Export Control Classification Number</b> — the task BIS performs against the Commerce Control List? Each model classifies the same items <b>unaided</b> and <b>with tools that let it read the actual control list</b>. Scores pool every run to date.</p>
   <div class="statstrip" id="statstrip"></div>
 </div></header>
+
+<section id="overview"><div class="wrap">
+  <div class="ovgrid">
+    <div class="ovcol">
+      <div class="ovk">The task</div>
+      <p>Commodity classification assigns an item — hardware, software, or technology — its <b>Export Control Classification Number</b> (ECCN) on the US Commerce Control List. An ECCN is a five-character code: a category digit, a product-group letter, and three identifying digits, sometimes with subparagraphs (e.g. <span class="mono">3A001.a.1.a</span>). An item subject to the export rules but matching no control-list entry is <span class="mono">EAR99</span>.</p>
+    </div>
+    <div class="ovcol">
+      <div class="ovk">The benchmark</div>
+      <p>CommodityBench pairs real commodities with the ECCN their manufacturer or another authoritative source assigned, confirmed by human review. Each model reads an item's name and description and returns an ECCN — once <b>unaided</b>, and once <b>with tools</b> that let it read the actual control list. Answers are graded on a partial-credit scale, from the exact code down to the right category.</p>
+    </div>
+    <div class="ovcol">
+      <div class="ovk">Why it matters</div>
+      <p>An item's ECCN determines which export-control requirements apply to it; the Bureau of Industry and Security classifies commodities to set license rules and support enforcement. IAPS has argued BIS should adopt AI tools to augment a limited workforce — so how reliably current models perform this task is a prerequisite for deploying them in such a high-sensitivity setting.</p>
+    </div>
+  </div>
+</div></section>
 
 <section id="leaderboard"><div class="wrap">
   <div class="sechead"><span class="secnum">01</span><h2>Leaderboard</h2></div>
