@@ -15,7 +15,24 @@ RAG over the CCL, evaluated with vs. without retrieval.
 
 ## Status (as of 2026-06-26)
 
-- **Frontier comparison + PUBLIC site (NEWEST, this session).** Closed the reviewer note
+- **Error-mode analysis + future-work doc (NEWEST, analysis-only — no dataset/run changes).**
+  Dug into what the top tooled models (Opus 4.8, GPT-5.5, Qwen3-235B agentic) get wrong. The
+  dominant error budget is **Category-5 boundary over-control**, in two clusters: (1)
+  **mass-market crypto** — gold `5A992.c` predicted as controlled `5A002` (model identifies the
+  crypto but never applies the Cryptography Note / mass-market decontrol; the discriminating fact
+  isn't in the technical description); fixing the 8 gold-`5A992.c` items on the Opus agentic run
+  would move exact 0.559→0.706. (2) **Ethernet-PHY over-control** — gold EAR99 PHYs/switches
+  predicted `5A991` (model matches the telecom catch-all family without confirming any specific
+  parameter is met; tools make it *worse*, consistent across all 3 models on the same parts).
+  Second-most-common distinct error pooled is **under-classification → EAR99** (recall miss,
+  skewed to Qwen). Framing reached: mass-market = mostly a **benchmark-design** issue (input
+  starvation, with a model tail), PHY = mostly a genuine **model** issue (with a design tail —
+  the gold rests on a manufacturer self-class Digi-Key disagreed with). Full writeup +
+  prioritized v2 changes (add a `commercial_context`/availability field and A/B it, failure-mode
+  tagging, over/under asymmetry metric, category backfill, confidence tiers, RAG, holdout) in
+  **`results/future_research_directions.md`**. **Nothing in `data/` or `results/*.jsonl` was
+  touched — all runs remain valid.**
+- **Frontier comparison + PUBLIC site.** Closed the reviewer note
   that round-1 used a non-frontier OpenAI model (GPT-4o) and a small open model (Qwen3-32B),
   with tools only for Opus. Added **`gpt-5.5`** (OpenAI's strongest reasoning model on our
   account; `reasoning_effort=high`) and **`qwen3-235b`** (Qwen3-235B-A22B-Instruct-2507, 4-bit
