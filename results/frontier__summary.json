@@ -1,0 +1,27 @@
+{
+  "run_id": "frontier",
+  "dataset": "data/questions.jsonl",
+  "n_questions": 34,
+  "verified_only": false,
+  "rag": false,
+  "agentic": false,
+  "workers": 4,
+  "citable": false,
+  "note": "NOT CITABLE: includes verified=false questions. Run with --verified-only for headline numbers.",
+  "models": [
+    {
+      "model": "qwen3-235b",
+      "n": 34,
+      "attempted": 34,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.2353,
+      "eccn_accuracy": 0.3235,
+      "group_accuracy": 0.5294,
+      "category_accuracy": 0.5294,
+      "parse_rate": 1.0,
+      "mean_grade": 0.3794,
+      "exact_accuracy_attempted": 0.2353
+    }
+  ]
+}

@@ -63,8 +63,18 @@ _REGISTRY: dict[str, Callable[[str], ClassifierModel]] = {
     ),
     "claude-sonnet-4-6": _anthropic("claude-sonnet-4-6"),
     # --- OpenAI (GPT) ---
+    # GPT-4o is a NON-reasoning chat model (temp 0, no tools were given in the round-1
+    # comparison) — kept for back-compat / the original snapshot. For a fair peer to Opus
+    # 4.8 (a high-effort reasoning model), use a GPT-5 reasoning id below: these set
+    # `reasoning_effort` (which switches the adapter to max_completion_tokens + no
+    # temperature) and get the same `--agentic` CCL tools via OpenAIModel.classify_agentic.
+    # `gpt-5.5` (2026-04-23) is OpenAI's strongest general reasoning model on this account,
+    # the closest contemporary to Opus 4.8 (2026-05); `-pro` is the slower/pricier tier.
     "gpt-4o": _openai("gpt-4o"),
     "gpt-4o-mini": _openai("gpt-4o-mini"),
+    "gpt-5.5": _openai("gpt-5.5", reasoning_effort="high", max_tokens=16384),
+    "gpt-5.5-pro": _openai("gpt-5.5-pro", reasoning_effort="high", max_tokens=16384),
+    "gpt-5-mini": _openai("gpt-5-mini", reasoning_effort="high", max_tokens=16384),
     # --- Google (Gemini) ---
     "gemini-2.0-flash": _gemini("gemini-2.0-flash"),
     "gemini-1.5-pro": _gemini("gemini-1.5-pro"),
@@ -83,6 +93,24 @@ _REGISTRY: dict[str, Callable[[str], ClassifierModel]] = {
         structured="none",
         temperature=0.6,
         top_p=0.95,
+        max_tokens=16384,
+        extra_body={"top_k": 20, "min_p": 0},
+    ),
+    # Frontier open-weight: Qwen3-235B-A22B-Instruct-2507 (MoE, 22B active), 4-bit AWQ
+    # (~124 GB) on a self-deployed RunPod serverless vLLM endpoint, TP=2 on 2xH100-80GB,
+    # launched with --enable-auto-tool-choice + the hermes tool parser so it gets the same
+    # --agentic CCL tools as Opus 4.8 (via OpenAIModel.classify_agentic chat-completions
+    # loop). This is the Instruct (NON-thinking) variant, so no <think> trace; sampling
+    # follows the model card (temp 0.7 / top_p 0.8 / top_k 20). The base_url's endpoint id
+    # is account-specific — re-deploy and update if the endpoint is torn down (deploy
+    # recorded in the session scratchpad; tear down after runs to stop GPU billing).
+    "qwen3-235b": _openai(
+        "QuantTrio/Qwen3-235B-A22B-Instruct-2507-AWQ",
+        base_url="https://api.runpod.ai/v2/ev2xl0fh8trdj1/openai/v1",
+        api_key_env="RUNPOD_API_KEY",
+        structured="none",
+        temperature=0.7,
+        top_p=0.8,
         max_tokens=16384,
         extra_body={"top_k": 20, "min_p": 0},
     ),

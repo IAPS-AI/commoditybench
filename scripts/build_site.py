@@ -32,8 +32,12 @@ LEVELS = ["exact", "eccn", "group", "category", "none"]
 MODEL_META = {
     "claude-opus-4-8": {"name": "Claude Opus 4.8", "vendor": "Anthropic",
                         "mode": "adaptive thinking", "weight": "frontier"},
-    "gpt-4o": {"name": "GPT-4o", "vendor": "OpenAI", "mode": "temp 0",
-               "weight": "frontier"},
+    "gpt-5.5": {"name": "GPT-5.5", "vendor": "OpenAI",
+                "mode": "reasoning (high effort)", "weight": "frontier"},
+    "gpt-4o": {"name": "GPT-4o", "vendor": "OpenAI", "mode": "no reasoning, temp 0",
+               "weight": "older"},
+    "qwen3-235b": {"name": "Qwen3-235B-A22B", "vendor": "Alibaba (open weights)",
+                   "mode": "Instruct-2507, RunPod vLLM", "weight": "frontier-open"},
     "qwen3-32b": {"name": "Qwen3-32B", "vendor": "Alibaba (open weights)",
                   "mode": "thinking, RunPod", "weight": "open"},
 }
@@ -152,7 +156,7 @@ def build(crossmodel_summary: Path, agentic_summary: Path, out_path: Path,
 
     # Within-model tool lift.
     toollift = {
-        "model": MODEL_META[ag_model]["name"],
+        "model": MODEL_META.get(ag_model, {}).get("name", ag_model),
         "baseline": _split(base_rows),
         "agentic": _split(ag_rows),
         "per_category": _per_category(base_rows, ag_rows),

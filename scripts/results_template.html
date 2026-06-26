@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CommodityBench — LLM export-control classification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAF7; --panel:#FFFFFF; --ink:#17181A; --muted:#6E7177; --faint:#9CA0A6;
+  --rule:#E5E4DD; --rule-strong:#CFCDC3;
+  --tool:#0E6E60; --tool-soft:#0E6E601a; --notool:#AEB2B8;
+  --g-exact:#0E5C50; --g-eccn:#3E9286; --g-group:#7CB7AD; --g-cat:#B6D7D0; --g-none:#E8E6DE;
+  --over:#C0743F; --under:#5B7FB0; --wsub:#86A39B; --wentry:#B0AB92; --wctrl:#C9C3AE; --wcat:#DCD7C8; --na:#CBCDC7;
+  --display:"Archivo",sans-serif; --body:"Inter",sans-serif; --mono:"IBM Plex Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;line-height:1.08}
+.mono{font-family:var(--mono)}
+
+/* ---- masthead ---- */
+header.top{border-bottom:1px solid var(--rule-strong);padding:38px 0 26px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+header.top h1{font-size:46px;font-weight:800;margin:12px 0 8px}
+header.top .def{max-width:620px;color:var(--muted);font-size:16px}
+header.top .def b{color:var(--ink);font-weight:600}
+.statstrip{display:flex;flex-wrap:wrap;gap:0;margin-top:26px;border:1px solid var(--rule);background:var(--panel)}
+.statstrip .s{flex:1 1 0;min-width:120px;padding:14px 16px;border-right:1px solid var(--rule)}
+.statstrip .s:last-child{border-right:0}
+.statstrip .n{font-family:var(--display);font-weight:700;font-size:25px}
+.statstrip .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+
+/* ---- section scaffolding ---- */
+section{padding:54px 0;border-bottom:1px solid var(--rule)}
+.sechead{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
+.secnum{font-family:var(--mono);font-size:13px;color:var(--tool);font-weight:600}
+.sechead h2{font-size:27px;font-weight:700}
+.secsub{color:var(--muted);max-width:680px;margin:0 0 30px;font-size:14.5px}
+.note{font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.02em}
+
+/* ---- chart primitives ---- */
+.chart{background:var(--panel);border:1px solid var(--rule);padding:24px 26px 18px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.legend .it{display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.sq{width:10px;height:10px;display:inline-block;border-radius:2px}
+
+.controls{display:flex;gap:6px;margin-left:auto}
+.controls button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:5px 11px;border:1px solid var(--rule-strong);background:var(--panel);color:var(--muted);cursor:pointer;border-radius:2px}
+.controls button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* dumbbell rows */
+.lb-row{display:grid;grid-template-columns:188px 1fr 64px;align-items:center;gap:14px;padding:9px 0;border-top:1px solid var(--rule)}
+.lb-row:first-of-type{border-top:0}
+.lb-name{font-weight:600;font-size:14px;display:flex;flex-direction:column;gap:2px}
+.lb-name .v{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:400;letter-spacing:.02em}
+.chip{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:1px 5px;border-radius:2px;border:1px solid var(--rule-strong);color:var(--muted);width:max-content}
+.chip.open{color:var(--tool);border-color:var(--tool)}
+.track{position:relative;height:22px}
+.gridline{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--rule)}
+.conn{position:absolute;height:2px;background:var(--rule-strong);top:50%;transform:translateY(-50%)}
+.mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%}
+.mk.base{background:var(--panel);border:2px solid var(--notool)}
+.mk.tool{background:var(--tool);border:2px solid var(--tool)}
+.mk-mini{width:11px;height:11px;border-radius:50%;display:inline-block;vertical-align:-1px}
+.mk-mini.base{background:var(--panel);border:2px solid var(--notool)}
+.mk-mini.tool{background:var(--tool)}
+.lb-val{font-family:var(--mono);font-size:13px;text-align:right;font-weight:500}
+.axis{display:grid;grid-template-columns:188px 1fr 64px;gap:14px;margin-top:8px}
+.axis .ticks{position:relative;height:16px;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.axis .ticks span{position:absolute;transform:translateX(-50%)}
+
+/* table */
+table{width:100%;border-collapse:collapse;margin-top:22px;font-size:13.5px}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--rule)}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;cursor:pointer;user-select:none}
+th:first-child,td:first-child{text-align:left}
+td.num{font-family:var(--mono)}
+tbody tr:hover{background:#00000005}
+td .bar{display:inline-block;height:7px;background:var(--g-eccn);vertical-align:middle;margin-left:8px;border-radius:1px}
+
+/* uplift */
+.uprow{padding:18px 0;border-top:1px solid var(--rule)}
+.uprow:first-child{border-top:0}
+.uphead{display:flex;align-items:baseline;gap:10px;margin-bottom:9px}
+.uphead .nm{font-family:var(--display);font-weight:600;font-size:16px}
+.uphead .d{font-family:var(--mono);font-size:12px;color:var(--tool);font-weight:600;margin-left:auto}
+.upbar{position:relative;height:26px;background:var(--bg);border:1px solid var(--rule)}
+.upbar .seg-base{position:absolute;left:0;top:0;bottom:0;background:var(--notool)}
+.upbar .seg-lift{position:absolute;top:0;bottom:0;background:var(--tool)}
+.upbar .lbl{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10.5px;color:#fff;padding:0 6px}
+.catgrid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--rule)}
+.catcell{background:var(--panel);padding:9px 11px}
+.catcell .cn{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+.catcell .cn b{color:var(--ink);font-weight:600}
+.catcell .mini{position:relative;height:6px;background:var(--g-none);margin-top:7px;border-radius:1px}
+.catcell .mini .b{position:absolute;top:0;bottom:0;left:0;background:var(--notool)}
+.catcell .mini .a{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--tool)}
+.catcell .vals{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:6px;display:flex;justify-content:space-between}
+
+/* taxonomy */
+.taxrow{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;padding:7px 0}
+.taxrow .tn{font-size:13px}
+.taxrow .tn .cond{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.stack{display:flex;height:24px;border:1px solid var(--rule);overflow:hidden}
+.stack .seg{height:100%}
+.taxlegend{display:flex;flex-wrap:wrap;gap:13px;font-family:var(--mono);font-size:11px;color:var(--muted);margin:16px 0 4px}
+
+/* representative cases */
+.casehead{font-family:var(--display);font-weight:700;font-size:17px;margin:36px 0 0}
+.casehead span{color:var(--muted);font-weight:500;font-size:13px}
+.cases{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.case{background:var(--panel);padding:13px 18px}
+.ctop{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ctop .citem{font-weight:600;font-size:14px}
+.ctop .ccat{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.ctop .cgold{margin-left:auto;font-family:var(--mono);font-size:12px}
+.ctop .cgold .gl{color:var(--faint);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;margin-right:6px}
+.crow{display:grid;grid-template-columns:104px 1fr;gap:12px;align-items:start;padding:8px 0 0;margin-top:8px;border-top:1px solid var(--rule)}
+.crow .cm{font-size:12px;font-weight:600;padding-top:2px}
+.cbody{display:flex;flex-direction:column;gap:5px}
+.cline{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.unaided{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.unaided b{color:var(--muted);font-weight:500}
+.rt{font-family:var(--mono);font-size:10px;color:var(--tool);cursor:pointer;user-select:none;margin-left:auto}
+.segchips{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.seg{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:2px;background:var(--g-none);color:var(--muted)}
+.seg.hit{background:var(--g-exact);color:#fff}
+.seg.miss{background:#EEDfd6;color:var(--over)}
+.mtag{font-family:var(--mono);font-size:9.5px;padding:1px 7px 1px 5px;border-radius:2px;white-space:nowrap;background:var(--bg);border:1px solid var(--rule-strong);color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+.mtag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--mc,var(--muted));flex:none}
+.ttrace{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.ttrace b{color:var(--tool)}
+.creason{font-size:11.5px;color:var(--muted);line-height:1.5;max-height:0;overflow:hidden;transition:max-height .25s}
+.crow.open .creason{max-height:320px;padding:3px 0 2px}
+.showall{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;margin-top:16px;padding:10px 16px;border:1px solid var(--rule-strong);background:var(--panel);color:var(--muted);cursor:pointer;border-radius:2px;width:100%}
+.showall:hover{border-color:var(--ink);color:var(--ink)}
+footer{padding:34px 0 60px;color:var(--muted);font-size:12.5px}
+footer .mono{font-size:11px;color:var(--faint)}
+@media(max-width:680px){
+  header.top h1{font-size:34px}
+  .lb-row,.axis{grid-template-columns:120px 1fr 50px}
+  .lb-name .v{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">IAPS · Commerce Control List benchmark</div>
+  <h1>CommodityBench</h1>
+  <p class="def">Can language models assign a commodity its correct <b>Export Control Classification Number</b> — the task BIS performs against the Commerce Control List? Each model classifies the same items <b>unaided</b> and <b>with tools that let it read the actual control list</b>. Scores pool every run to date.</p>
+  <div class="statstrip" id="statstrip"></div>
+</div></header>
+
+<section id="leaderboard"><div class="wrap">
+  <div class="sechead"><span class="secnum">01</span><h2>Leaderboard</h2></div>
+  <p class="secsub">Every model, unaided and with CCL tools. Marks show mean grade on the verified set; the line is the distance tools move each model. Models without a filled mark were not run with tools.</p>
+  <div class="chart">
+    <div class="legend">
+      <span class="it"><span class="mk-mini base"></span> no tools</span>
+      <span class="it"><span class="mk-mini tool"></span> with CCL tools</span>
+      <span class="controls" id="lb-metric"><button data-m="grade" class="on">Grade</button><button data-m="exact">Exact</button></span>
+    </div>
+    <div id="lb-chart"></div>
+    <div class="axis"><div></div><div class="ticks" id="lb-axis"></div><div></div></div>
+  </div>
+  <table id="lb-table"><thead><tr>
+    <th data-k="name">Model</th><th data-k="exact">Exact ·notool</th><th data-k="grade">Grade ·notool</th>
+    <th data-k="agrade">Grade ·tools</th><th data-k="n_runs">Runs</th><th data-k="n_obs">Obs</th>
+  </tr></thead><tbody></tbody></table>
+  <p class="note" id="lb-note" style="margin-top:14px"></p>
+</div></section>
+
+<section id="uplift"><div class="wrap">
+  <div class="sechead"><span class="secnum">02</span><h2>Within-model tool uplift</h2></div>
+  <p class="secsub">For the models run in both conditions, how much does reading the control list change the score — overall, and by CCL category. Grade scale 0–1.</p>
+  <div class="chart" id="uplift-bars"></div>
+  <div id="uplift-cats" style="margin-top:26px"></div>
+</div></section>
+
+<section id="mistakes"><div class="wrap">
+  <div class="sechead"><span class="secnum">03</span><h2>What the models get wrong</h2></div>
+  <p class="secsub">Every prediction sorted by how it misses: pushing an uncontrolled item onto the list (over-classification), calling a controlled item EAR99 (under-classification), or landing in the wrong place on the list. Distribution first, then individual cases with the model's reasoning and tool trace.</p>
+  <div class="taxlegend" id="tax-legend"></div>
+  <div class="chart" id="tax-chart"></div>
+
+  <h3 class="casehead">Representative cases<span> · predictions with CCL tools</span></h3>
+  <p class="note" style="margin:4px 0 16px">One item per error type. Chips are the predicted ECCN split into its segments — category · group · number · subparagraphs — lit to the depth each model matched the verified code.</p>
+  <div class="cases" id="cases"></div>
+  <button class="showall" id="showall">Show all 23 items</button>
+</div></section>
+
+<footer><div class="wrap">
+  <div>CommodityBench · IAPS. Scores are mean partial-credit grade (exact 1.0 / same ECCN 0.7 / product group 0.4 / category 0.2) over the human-verified item set, pooled across all runs; an API error or unparsed answer counts as 0.</div>
+  <div class="mono" id="foot-meta" style="margin-top:8px"></div>
+</div></footer>
+
+<script>
+const DATA = /*__DATA__*/;
+const $=(s,e=document)=>e.querySelector(s); const $$=(s,e=document)=>[...e.querySelectorAll(s)];
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const pct=x=>x==null?'—':(x*100).toFixed(0); const f2=x=>x==null?'—':x.toFixed(2);
+const MLABEL=DATA.mistake_label, MORDER=DATA.mistake_order;
+const MCOLOR={correct:'var(--tool)',over_control:'var(--over)',under_control:'var(--under)',
+  wrong_subparagraph:'var(--wsub)',wrong_entry:'var(--wentry)',wrong_control:'var(--wctrl)',
+  wrong_category:'var(--wcat)',no_answer:'var(--na)'};
+
+/* ---- masthead stats ---- */
+(function(){
+  const m=DATA.meta, s=$('#statstrip');
+  const cells=[[m.n_models_baseline,'models'],[m.n_runs,'runs pooled'],[m.n_obs.toLocaleString(),'observations'],
+               [m.n_verified,'verified items'],[DATA.leaderboard.agentic.length,'run with tools']];
+  cells.forEach(([n,k])=>{const d=el('div','s');d.append(el('div','n',String(n)),el('div','k',k));s.append(d);});
+  $('#foot-meta').textContent='Runs pooled: '+m.runs.join(' · ')+'  ·  generated '+DATA.generated;
+})();
+
+/* ---- 01 leaderboard dumbbell ---- */
+const lb={metric:'grade'};
+function maxX(){return 1;}
+function drawLB(){
+  const host=$('#lb-chart');host.innerHTML='';
+  const base=Object.fromEntries(DATA.leaderboard.baseline.map(c=>[c.model,c]));
+  const tool=Object.fromEntries(DATA.leaderboard.agentic.map(c=>[c.model,c]));
+  // order by best available metric (tools if present else baseline)
+  const models=[...new Set([...DATA.leaderboard.baseline.map(c=>c.model)])];
+  const val=(c)=>c?(lb.metric==='grade'?c.grade:c.exact):null;
+  models.sort((a,b)=>(val(tool[b])??val(base[b]))-(val(tool[a])??val(base[a])));
+  const ticks=[0,.25,.5,.75,1];
+  models.forEach(mid=>{
+    const b=base[mid],t=tool[mid];const bv=val(b),tv=val(t);
+    const row=el('div','lb-row');
+    const nm=el('div','lb-name');
+    nm.append(el('span',null,b.name));
+    const meta=el('span','v',b.vendor);
+    nm.append(meta);
+    if(b.weight==='open')nm.append(el('span','chip open','open weights'));
+    row.append(nm);
+    const track=el('div','track');
+    ticks.forEach(tk=>{const g=el('div','gridline');g.style.left=(tk*100)+'%';track.append(g);});
+    if(tv!=null){const lo=Math.min(bv,tv),hi=Math.max(bv,tv);
+      const c=el('div','conn');c.style.left=(lo*100)+'%';c.style.width=((hi-lo)*100)+'%';track.append(c);}
+    const mb=el('div','mk base');mb.style.left=(bv*100)+'%';mb.title='no tools: '+f2(bv);track.append(mb);
+    if(tv!=null){const mt=el('div','mk tool');mt.style.left=(tv*100)+'%';mt.title='with tools: '+f2(tv);track.append(mt);}
+    row.append(track);
+    const v=el('div','lb-val',f2(tv!=null?Math.max(bv,tv):bv));
+    row.append(v);
+    host.append(row);
+  });
+  const ax=$('#lb-axis');ax.innerHTML='';ticks.forEach(tk=>{const s=el('span',null,tk.toFixed(2));s.style.left=(tk*100)+'%';ax.append(s);});
+}
+$$('#lb-metric button').forEach(btn=>btn.onclick=()=>{lb.metric=btn.dataset.m;$$('#lb-metric button').forEach(x=>x.classList.toggle('on',x===btn));drawLB();});
+drawLB();
+
+/* leaderboard table */
+(function(){
+  const base=DATA.leaderboard.baseline, tool=Object.fromEntries(DATA.leaderboard.agentic.map(c=>[c.model,c]));
+  const tb=$('#lb-table tbody');
+  const rows=base.map(c=>({...c,agrade:tool[c.model]?tool[c.model].grade:null}));
+  let sortk='grade',dir=-1;
+  function render(){
+    rows.sort((a,b)=>{const x=a[sortk]??-1,y=b[sortk]??-1;return typeof x==='string'?dir*x.localeCompare(y):dir*(x-y);});
+    tb.innerHTML='';
+    rows.forEach(c=>{
+      const tr=el('tr');
+      const nm=el('td',null,c.name+' <span class="mono" style="color:var(--faint);font-size:11px">'+(c.weight==='open'?'· open':'')+'</span>');
+      tr.append(nm);
+      tr.append(el('td','num',(c.exact*100).toFixed(0)+'%'));
+      const g=el('td','num');g.innerHTML=f2(c.grade)+'<span class="bar" style="width:'+(c.grade*46)+'px"></span>';tr.append(g);
+      tr.append(el('td','num',c.agrade!=null?f2(c.agrade):'—'));
+      tr.append(el('td','num',String(c.n_runs)));
+      tr.append(el('td','num',String(c.n_obs)));
+      tb.append(tr);
+    });
+  }
+  $$('#lb-table th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k===sortk)dir*=-1;else{sortk=k;dir=(k==='name')?1:-1;}render();});
+  render();
+  const op=DATA.leaderboard.baseline.find(c=>c.model==='claude-opus-4-8');
+  $('#lb-note').textContent='Pooled across runs to damp per-run variance — e.g. Claude Opus 4.8 unaided spans grade '+f2(op.grade_min)+'–'+f2(op.grade_max)+' across its '+op.n_runs+' runs (mean '+f2(op.grade)+').';
+})();
+
+/* ---- 02 uplift ---- */
+(function(){
+  const host=$('#uplift-bars');
+  DATA.uplift.forEach(u=>{
+    const row=el('div','uprow');
+    const bv=u.baseline.grade, av=u.agentic.grade, d=av-bv;
+    const h=el('div','uphead');
+    h.append(el('span','nm',u.name));
+    h.append(el('span','chip'+(u.weight==='open'?' open':''),u.weight==='open'?'open weights':u.vendor));
+    h.append(el('span','d',(d>=0?'+':'')+f2(d)+' grade'));
+    row.append(h);
+    const bar=el('div','upbar');
+    const sb=el('div','seg-base');sb.style.width=(bv*100)+'%';sb.append(el('span','lbl',f2(bv)));
+    const sl=el('div','seg-lift');sl.style.left=(Math.min(bv,av)*100)+'%';sl.style.width=(Math.abs(av-bv)*100)+'%';
+    bar.append(sb,sl);
+    // tools-value tick label above the bar
+    const tl=el('div');tl.style.cssText='position:absolute;top:-16px;font-family:var(--mono);font-size:10.5px;color:var(--tool)';tl.style.left='calc('+(av*100)+'% - 14px)';tl.textContent=f2(av);
+    bar.append(tl);
+    row.append(bar);
+    const note=el('div','note');note.style.marginTop='6px';
+    note.textContent='no tools '+f2(bv)+' ('+u.baseline.n_runs+' run'+(u.baseline.n_runs>1?'s':'')+') → with tools '+f2(av)+' ('+u.agentic.n_runs+' run'+(u.agentic.n_runs>1?'s':'')+'), mean '+u.agentic.mean_tool_calls+' tool calls/item';
+    row.append(note);
+    host.append(row);
+  });
+  // per-category small multiples — use the model with the most pooled runs (densest data)
+  const dense=[...DATA.uplift].sort((a,b)=>(b.baseline.n_runs+b.agentic.n_runs)-(a.baseline.n_runs+a.agentic.n_runs))[0];
+  const cats=dense?dense.per_category:[];
+  const catHost=$('#uplift-cats');
+  catHost.append(el('div','note','Per-category grade, no tools (bar) → with tools (tick). Pooled; item counts are small per category — read as direction, not precision. Showing '+(dense?dense.name:'')+' ('+(dense?dense.baseline.n_runs+dense.agentic.n_runs:0)+' runs pooled).'));
+  const grid=el('div','catgrid');
+  cats.forEach(c=>{
+    if(c.baseline==null&&c.agentic==null)return;
+    const cell=el('div','catcell');
+    const cn=el('div','cn');cn.innerHTML='<b>'+(c.category==='EAR99'?'EAR99':'Cat '+c.category)+'</b><span>'+(DATA.category_names[c.category]||'')+'</span>';
+    cell.append(cn);
+    const mini=el('div','mini');
+    if(c.baseline!=null){const b=el('div','b');b.style.width=(c.baseline*100)+'%';mini.append(b);}
+    if(c.agentic!=null){const a=el('div','a');a.style.left=(c.agentic*100)+'%';mini.append(a);}
+    cell.append(mini);
+    const vals=el('div','vals');vals.innerHTML='<span>'+(c.baseline!=null?f2(c.baseline):'—')+'</span><span>→ '+(c.agentic!=null?f2(c.agentic):'—')+'</span>';
+    cell.append(vals);
+    grid.append(cell);
+  });
+  catHost.append(grid);
+})();
+
+/* ---- 03 taxonomy ---- */
+(function(){
+  const leg=$('#tax-legend');
+  MORDER.forEach(t=>{const it=el('span','it');it.innerHTML='<span class="sq" style="background:'+MCOLOR[t]+'"></span> '+MLABEL[t];leg.append(it);});
+  const host=$('#tax-chart');
+  const bmap=Object.fromEntries(DATA.taxonomy.baseline.map(t=>[t.model,t]));
+  const amap=Object.fromEntries(DATA.taxonomy.agentic.map(t=>[t.model,t]));
+  // order models: those with agentic first, by name
+  const models=DATA.uplift.map(u=>u.model);
+  models.forEach(mid=>{
+    [['no tools',bmap[mid]],['with tools',amap[mid]]].forEach(([cond,t])=>{
+      if(!t)return;
+      const row=el('div','taxrow');
+      const nm=el('div','tn');nm.innerHTML=(t.name||mid)+'<br><span class="cond">'+cond+'</span>';
+      row.append(nm);
+      const stack=el('div','stack');
+      const tot=MORDER.reduce((s,k)=>s+(t.counts[k]||0),0)||1;
+      MORDER.forEach(k=>{const v=t.counts[k]||0;if(v<=0)return;const seg=el('div','seg');seg.style.background=MCOLOR[k];seg.style.width=(v/tot*100)+'%';seg.title=MLABEL[k]+': '+(v/tot*100).toFixed(0)+'%';stack.append(seg);});
+      row.append(stack);
+      host.append(row);
+    });
+  });
+})();
+
+/* ---- 03 segment-match + explorer ---- */
+function segsOf(eccn){
+  if(!eccn||eccn==='—')return ['—'];
+  if(eccn.toUpperCase()==='EAR99')return ['EAR99'];
+  const head=eccn.slice(0,5);const rest=eccn.slice(5).replace(/^\./,'');
+  const segs=[head[0],head[1],head.slice(2)];
+  if(rest)rest.split('.').forEach(s=>segs.push(s));
+  return segs;
+}
+function renderSegs(pred,gold){
+  const ps=segsOf(pred),gs=segsOf(gold);const wrap=el('div','segchips');
+  let broke=false;
+  ps.forEach((s,i)=>{
+    const c=el('span','seg');c.textContent=s;
+    if(!broke&&i<gs.length&&s===gs[i])c.classList.add('hit');
+    else{c.classList.add('miss');broke=true;}
+    wrap.append(c);
+  });
+  return wrap;
+}
+const NM={'claude-opus-4-8':'Opus 4.8','gpt-5.5':'GPT-5.5','qwen3-235b':'Qwen3-235B'};
+const MSHORT={correct:'correct',over_control:'over-classified',under_control:'under-classified',
+  wrong_subparagraph:'wrong subparagraph',wrong_entry:'wrong entry',wrong_control:'wrong control',
+  wrong_category:'wrong category',no_answer:'no answer',error:'error'};
+function mtag(mk){const m=mk||'error';const s=el('span','mtag',MSHORT[m]||m);s.style.setProperty('--mc',MCOLOR[m]||'var(--muted)');return s;}
+(function(){
+  const host=$('#cases'), btn=$('#showall');
+  const curated=new Set(DATA.curated);
+  function caseCard(ex){
+    const card=el('div','case');
+    const top=el('div','ctop');
+    top.append(el('span','citem',ex.item_name));
+    top.append(el('span','ccat',ex.category==='EAR99'?'EAR99':'Cat '+ex.category+' · '+(DATA.category_names[ex.category]||'')));
+    const gold=el('span','cgold');gold.innerHTML='<span class="gl">verified</span>'+ex.gold;top.append(gold);
+    card.append(top);
+    Object.entries(ex.models).forEach(([mid,m])=>{
+      const r=m.agentic||m.baseline; if(!r)return;
+      const row=el('div','crow');
+      row.append(el('div','cm',NM[mid]||mid));
+      const body=el('div','cbody'), line=el('div','cline');
+      line.append(renderSegs(r.pred,ex.gold));
+      line.append(mtag(r.mistake));
+      if(m.agentic && m.baseline && m.baseline.pred!==r.pred)
+        {const u=el('span','unaided');u.innerHTML='unaided <b>'+m.baseline.pred+'</b>';line.append(u);}
+      body.append(line);
+      if(r.reasoning){
+        const rt=el('span','rt','reasoning ▾');line.append(rt);
+        const trace=r.n_tools?'<span class="ttrace"><b>'+r.n_tools+' tool calls</b> · '+r.tools.join(' › ')+'</span><br>':'';
+        const re=el('div','creason',trace+r.reasoning);
+        rt.onclick=()=>{row.classList.toggle('open');rt.textContent=row.classList.contains('open')?'reasoning ▴':'reasoning ▾';};
+        body.append(re);
+      }
+      row.append(body); card.append(row);
+    });
+    return card;
+  }
+  let expanded=false;
+  function render(){
+    host.innerHTML='';
+    const ordered=expanded?DATA.examples:DATA.curated.map(id=>DATA.examples.find(e=>e.id===id)).filter(Boolean);
+    ordered.forEach(ex=>host.append(caseCard(ex)));
+  }
+  btn.textContent='Show all '+DATA.examples.length+' items';
+  btn.onclick=()=>{expanded=!expanded;btn.textContent=expanded?'Show representative cases only':('Show all '+DATA.examples.length+' items');render();};
+  render();
+})();
+</script>
+</body>
+</html>

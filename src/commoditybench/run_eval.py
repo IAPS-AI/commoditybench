@@ -46,8 +46,8 @@ def _evaluate_model(
     if agentic and not hasattr(model, "classify_agentic"):
         raise SystemExit(
             f"Model {model_name!r} does not support --agentic (no classify_agentic). "
-            "The agentic CCL-navigation condition is currently implemented for the "
-            "Anthropic adapter only."
+            "The agentic CCL-navigation condition is implemented for the Anthropic adapter "
+            "and the OpenAI / OpenAI-compatible adapter (GPT + vLLM/RunPod endpoints)."
         )
     rows: list[dict] = []
 
@@ -152,8 +152,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--agentic",
         action="store_true",
-        help="Let the model navigate the CCL via tools before answering (Anthropic only; "
-        "requires data/ccl/ccl_index.json — build with commoditybench.ccl.parse_ecfr).",
+        help="Let the model navigate the CCL via tools before answering (Anthropic + "
+        "OpenAI/OpenAI-compatible adapters; requires data/ccl/ccl_index.json — build with "
+        "commoditybench.ccl.parse_ecfr).",
     )
     parser.add_argument(
         "--list-models", action="store_true", help="List enrolled models and exit."

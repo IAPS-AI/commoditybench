@@ -1,0 +1,27 @@
+{
+  "run_id": "frontier_agentic",
+  "dataset": "data/questions.jsonl",
+  "n_questions": 34,
+  "verified_only": false,
+  "rag": false,
+  "agentic": true,
+  "workers": 4,
+  "citable": false,
+  "note": "NOT CITABLE: includes verified=false questions. Run with --verified-only for headline numbers.",
+  "models": [
+    {
+      "model": "gpt-5.5",
+      "n": 34,
+      "attempted": 33,
+      "errors": 1,
+      "error_rate": 0.0294,
+      "exact_accuracy": 0.5588,
+      "eccn_accuracy": 0.5882,
+      "group_accuracy": 0.7059,
+      "category_accuracy": 0.7353,
+      "parse_rate": 0.9706,
+      "mean_grade": 0.6324,
+      "exact_accuracy_attempted": 0.5758
+    }
+  ]
+}
