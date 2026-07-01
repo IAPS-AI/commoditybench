@@ -15,7 +15,7 @@ from pathlib import Path
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from aggregate_runs import classify_mistake, MODEL_META, CATEGORY_NAMES  # noqa: E402
+from aggregate_runs import classify_mistake, CATEGORY_NAMES  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
@@ -28,8 +28,9 @@ GRADE_WEIGHTS = {"exact": 1.0, "eccn": 0.7, "group": 0.4, "category": 0.2, "none
 BASELINE_SRC = {
     "claude-opus-4-8": "expanded", "gpt-4o": "expanded", "qwen3-32b": "expanded",
     "gpt-5.5": "frontier", "qwen3-235b": "frontier",
-    "claude-opus-4-1": "gen", "claude-opus-4-5": "gen",
-    "claude-opus-4-6": "gen", "claude-opus-4-7": "gen",
+    # The `gen` ladder (Opus 4.1-4.7) is deliberately absent: it's excluded from the
+    # leaderboard (see aggregate_runs.py) and its frozen rows are never re-scored after
+    # gold corrections, so loading them here would overwrite qmeta with stale golds.
 }
 AGENTIC_SRC = {
     "claude-opus-4-8": "expanded_agentic", "gpt-5.5": "frontier_agentic",

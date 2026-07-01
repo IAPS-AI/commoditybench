@@ -46,35 +46,38 @@ category accuracy and a mean graded score per model. See
 
 Full interactive results — cross-model leaderboard, within-model tool uplift, and a mistake
 taxonomy — are on the **[live site](https://iaps-ai.github.io/commoditybench/)**. Headline
-numbers below are **mean grade / exact-match** over the **23 human-verified items**, pooled
-across all runs of each model/condition to damp per-run noise. Each model runs in its own
-strongest native config, so this is **not equalized** — a capability snapshot, not a clean
-ranking.
+numbers below are **mean grade / exact-match** over the **full 34 human-verified items**,
+pooled across all runs of each model/condition to damp per-run noise (as of 2026-07-01;
+includes the `lnd-2517-he3` gold correction). Each model runs in its own strongest native
+config, so this is **not equalized** — a capability snapshot, not a clean ranking.
 
 **One-shot (no tools)**
 
 | Model | grade | exact |
 |---|---|---|
-| GPT-5.5 (reasoning) | **0.57** | **0.39** |
-| Claude Opus 4.5 | 0.52 | 0.39 |
-| Claude Opus 4.8 | 0.42 | 0.26 |
-| Qwen3-235B-A22B (open) | 0.44 | 0.26 |
-| GPT-4o | 0.37 | 0.17 |
-| Qwen3-32B (open) | 0.18 | 0.04 |
+| GPT-5.5 (reasoning) | **0.49** | 0.29 |
+| Claude Opus 4.8 | 0.45 | **0.30** |
+| GPT-4o | 0.39 | 0.18 |
+| Qwen3-235B-A22B (open) | 0.38 | 0.24 |
+| Qwen3-32B (open) | 0.12 | 0.03 |
 
 **With CCL tools (agentic — the model reads the actual rules before answering)**
 
 | Model | grade | exact | lift (grade) |
 |---|---|---|---|
-| GPT-5.5 | **0.66** | **0.61** | +0.10 |
-| Qwen3-235B-A22B | 0.62 | 0.48 | +0.18 |
-| Claude Opus 4.8 | 0.62 | 0.52 | +0.20 |
+| GPT-5.5 | **0.69** | **0.62** | +0.21 |
+| Claude Opus 4.8 | 0.65 | 0.56 | +0.20 |
+| Qwen3-235B-A22B | 0.48 | 0.35 | +0.10 |
 
-Takeaways: **grounding is the biggest lever** — reading the CCL adds +0.10 to +0.20 grade,
-more than any difference between models. A credible open-weight model (235B) matches the
-closed frontier. And even the best model **tops out around 0.61 exact with the rules in
-hand** — no model yet classifies these commodities reliably. Full write-up:
+Takeaways: **grounding is the biggest lever** — reading the CCL adds +0.10 to +0.21 grade
+for every model tested. The closed frontier models converge near the top with tools in
+hand; the open-weight 235B trails on the full 34-item set (its round-1 showing on the
+original 23 items was stronger). And even the best model **tops out around 0.62 exact with
+the rules in hand** — no model yet classifies these commodities reliably. Full write-up
+(numbers there predate the 34-item re-aggregation):
 [`results/frontier_comparison_findings.md`](results/frontier_comparison_findings.md).
+The Claude Opus generation ladder (4.1→4.8) is analyzed separately on the original 23-item
+set: [generation trendline](https://iaps-ai.github.io/commoditybench/generation_trendline.html).
 
 ## Install
 
@@ -186,7 +189,9 @@ Read before citing any cross-model number:
   strongest native config: Anthropic with adaptive thinking, GPT-5.5 at `reasoning_effort=high`,
   Qwen3 in thinking mode, but GPT-4o at `temperature=0` with no reasoning budget. That is
   **not** a clean apples-to-apples comparison. Headline numbers are also **pooled across runs**
-  (483 observations over 11 runs) to damp per-run stochasticity. Equalize the per-provider
+  (456 observations over 10 runs as of 2026-07-01) to damp per-run stochasticity; some pooled
+  runs cover only the original 23 items, so those items carry more observations each (every
+  model's pool still covers all 34). Equalize the per-provider
   config (or sweep reasoning settings) before publishing a definitive head-to-head ranking.
 - **Structured-output enforcement differs.** Anthropic and OpenAI use strict JSON-schema
   enforcement; the Gemini adapter uses best-effort `response_schema`. The base parser has a

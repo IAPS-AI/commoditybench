@@ -10,6 +10,20 @@
   "note": "NOT CITABLE: includes verified=false questions. Run with --verified-only for headline numbers.",
   "models": [
     {
+      "model": "gpt-5.5",
+      "n": 34,
+      "attempted": 34,
+      "errors": 0,
+      "error_rate": 0.0,
+      "exact_accuracy": 0.2941,
+      "eccn_accuracy": 0.4412,
+      "group_accuracy": 0.6471,
+      "category_accuracy": 0.6765,
+      "parse_rate": 1.0,
+      "mean_grade": 0.4853,
+      "exact_accuracy_attempted": 0.2941
+    },
+    {
       "model": "qwen3-235b",
       "n": 34,
       "attempted": 34,
@@ -23,5 +37,6 @@
       "mean_grade": 0.3794,
       "exact_accuracy_attempted": 0.2353
     }
-  ]
+  ],
+  "regenerated": "2026-07-01: models list recomputed from the per-item row files after the lnd-2517-he3 gold correction (1C232 -> EAR99) and the sign-off of all 34 items (verified: true)."
 }

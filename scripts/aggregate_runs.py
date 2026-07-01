@@ -21,15 +21,26 @@ RESULTS = ROOT / "results"
 
 # Which run-ids feed each condition. A run contributes a model only if its jsonl exists.
 # All listed runs are verified-only or include the verified items (we filter to verified).
-BASELINE_RUNS = ["ab_baseline", "ab2_baseline", "comparison", "expanded", "gen",
+# NOTE: the cross-generation ladder run `gen` (Opus 4.1/4.5/4.6/4.7/4.8) is intentionally
+# EXCLUDED here. Opus 4.1-4.7 appear ONLY in `gen`, which scored just the original 23-item
+# set, so pooling it gave those models a leaderboard cell over a different (easier) item set
+# than every other model's — 23-item generations out-ranked 34-item frontier models purely
+# because they never saw the 11 harder new items. The generation ladder keeps its own 23-item
+# analysis in dashboard/generation_trendline.html (built from results/gen__summary.json by
+# scripts/build_generation_trendline.py).
+# Residual caveat: ab_baseline/ab2_baseline/comparison/qwen3_32b_runpod also cover only the
+# original 23 items. Every model they contribute to also has a 34-item run (expanded or
+# frontier), so each pooled cell still covers all 34 verified items — but the original 23
+# carry more observations per item, and run_grades/grade_min/grade_max mix run means taken
+# over different item sets. Treat the printed range as run+item-set spread, not pure run
+# variance. A coverage-gated pooling rule would fix this properly (see review 2026-07-01).
+BASELINE_RUNS = ["ab_baseline", "ab2_baseline", "comparison", "expanded",
                  "qwen3_32b_runpod", "frontier"]
 AGENTIC_RUNS = ["ab_agentic", "ab2_agentic", "expanded_agentic", "frontier_agentic"]
 
+# Opus 4.1-4.7 metadata lives with the ladder in scripts/build_generation_trendline.py;
+# with `gen` excluded above, no run here produces those models.
 MODEL_META = {
-    "claude-opus-4-1": ("Claude Opus 4.1", "Anthropic", "closed", "2025-08-05"),
-    "claude-opus-4-5": ("Claude Opus 4.5", "Anthropic", "closed", "2025-11-24"),
-    "claude-opus-4-6": ("Claude Opus 4.6", "Anthropic", "closed", "2026-02-04"),
-    "claude-opus-4-7": ("Claude Opus 4.7", "Anthropic", "closed", "2026-04-14"),
     "claude-opus-4-8": ("Claude Opus 4.8", "Anthropic", "closed", "2026-05-28"),
     "gpt-4o": ("GPT-4o", "OpenAI", "closed", "2024-05-13"),
     "gpt-5.5": ("GPT-5.5", "OpenAI", "closed", "2026-04-23"),
@@ -257,14 +268,18 @@ def main():
     }
     out = ROOT / "dashboard" / "site_data.json"
     out.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    # console summary
-    print("BASELINE (no tools), pooled across runs, verified-23:")
+    # console summary (n derived from the pooled cells, not hardcoded)
+    n_set = sorted({c["n_items"] for c in baseline + agentic})
+    n_label = "/".join(str(n) for n in n_set)
+    print(f"BASELINE (no tools), pooled across runs, verified set (n={n_label}):")
     for c in baseline:
         print(f"  {c['name']:<20} grade={c['grade']:.3f} exact={c['exact']:.3f} "
-              f"runs={c['n_runs']} obs={c['n_obs']} range=[{c['grade_min']:.2f},{c['grade_max']:.2f}]")
+              f"items={c['n_items']} runs={c['n_runs']} obs={c['n_obs']} "
+              f"range=[{c['grade_min']:.2f},{c['grade_max']:.2f}]")
     print("AGENTIC (tools):")
     for c in agentic:
-        print(f"  {c['name']:<20} grade={c['grade']:.3f} exact={c['exact']:.3f} runs={c['n_runs']} obs={c['n_obs']}")
+        print(f"  {c['name']:<20} grade={c['grade']:.3f} exact={c['exact']:.3f} "
+              f"items={c['n_items']} runs={c['n_runs']} obs={c['n_obs']}")
     print(f"\nWrote {out}")
 
 

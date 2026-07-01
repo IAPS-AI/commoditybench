@@ -15,13 +15,14 @@
       "attempted": 34,
       "errors": 0,
       "error_rate": 0.0,
-      "exact_accuracy": 0.5588,
-      "eccn_accuracy": 0.6176,
-      "group_accuracy": 0.7059,
-      "category_accuracy": 0.7353,
+      "exact_accuracy": 0.5882,
+      "eccn_accuracy": 0.6471,
+      "group_accuracy": 0.7353,
+      "category_accuracy": 0.7647,
       "parse_rate": 1.0,
-      "mean_grade": 0.6412,
-      "exact_accuracy_attempted": 0.5588
+      "mean_grade": 0.6706,
+      "exact_accuracy_attempted": 0.5882
     }
-  ]
+  ],
+  "regenerated": "2026-07-01: models list recomputed from the per-item row files after the lnd-2517-he3 gold correction (1C232 -> EAR99) and the sign-off of all 34 items (verified: true)."
 }

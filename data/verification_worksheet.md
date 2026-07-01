@@ -41,7 +41,7 @@ Generated from `data/questions.jsonl` by `scripts/make_worksheet.py`. The **Veri
 | 27 | Tactical-grade 6-DOF MEMS inertial measurement unit (~1 cubic inch) | `7A994` | VERIFIED | [page](https://www.honeywellaerospace.com/us/en/products-and-services/products/navigation-and-sensors/inertial-measurement-units/hguide-i300-mems-inertial-measurement-unit) | ✅ |  |
 | 28 | Boron-trifluoride thermal neutron proportional counter | `1A999` | VERIFIED | [LND FAQ — ECCN-by-family](https://www.lndinc.com/faq/) | ✅ |  |
 | 29 | Boron-10 lined thermal neutron proportional counter | `1A999` | VERIFIED | [LND FAQ — ECCN-by-family](https://www.lndinc.com/faq/) | ✅ |  |
-| 30 | Helium-3 thermal neutron detector tube | `1C232` | VERIFIED | [LND FAQ — ECCN-by-family](https://www.lndinc.com/faq/) | ✅ |  |
+| 30 | Helium-3 thermal neutron detector tube | `EAR99` | VERIFIED | [LND FAQ — ECCN-by-family](https://www.lndinc.com/faq/) | ✅ |  |
 | 31 | Bronze rotary gear pump, 23 GPM | `2B999.j` | VERIFIED | [page](https://www.motion.com/products/sku/11016143) | ✅ |  |
 | 32 | Super-precision angular contact ball bearing, 15 mm bore (P4/ABEC-7) | `EAR99` | VERIFIED | [page](https://www.powelltool.com/products/7002CYDUP4-NAC) | ✅ |  |
 | 33 | Aircraft access-panel cam latch (airframe hardware) | `9A991.d` | VERIFIED | [page](https://www.pilotshq.com/products/piper-aircraft-553-876-cam-latch-oem-airframe-hardware-part) | ✅ |  |
@@ -194,10 +194,10 @@ Generated from `data/questions.jsonl` by `scripts/make_worksheet.py`. The **Veri
 - **Source:** https://www.lndinc.com/faq/
 - **Notes:** TIER B (LND FAQ, human-visible; family-level assignment). Quote: "Our BF3 detectors and B10 lined detectors have been assigned ECCN 1A999 by BIS." Specs from https://www.lndinc.com/products/neutron-detectors/2311/. verified=false.
 
-### 30. lnd-2517-he3 — `1C232`  [VERIFIED]
+### 30. lnd-2517-he3 — `EAR99`  [VERIFIED]
 - **Item:** Helium-3 thermal neutron detector tube (LND, Inc.)
 - **Source:** https://www.lndinc.com/faq/
-- **Notes:** TIER B (LND FAQ, human-visible). Quote: "Certain models of our 3He tubes are covered by the ECCN 1C232." 1C232 controls Helium-3 (nuclear nonproliferation). CAVEAT: FAQ hedges 'certain models' - per-model 1C232 vs EAR99/1A999 not individually published; the He-3 detector is the canonical 1C232 fit. Specs from https://www.lndinc.com/products/neutron-detectors/2517/. verified=false.
+- **Notes:** CORRECTED 1C232 -> EAR99 on 2026-07-01 (POST-RUNS): the LND FAQ 1C232 statement is family-level ('certain models'), not part-specific, and 1C232's own Controls note decontrols any device containing <1 g of He-3. This tube's fill (4560 torr, 3.91 cm^3, 294 K ~= 2.9 mg He-3) is far below 1 g, so it is EAR99, not 1C232. Opus 4.8 and GPT-5.5 (agentic) both derived this correctly. All results/*.jsonl containing this item were re-scored against the new gold the same day (2026-07-01) and their run summaries regenerated. Specs from https://www.lndinc.com/products/neutron-detectors/2517/.
 
 ### 31. oberdorfer-obn9000rs3 — `2B999.j`  [VERIFIED]
 - **Item:** Bronze rotary gear pump, 23 GPM (Oberdorfer (Ingersoll Rand))

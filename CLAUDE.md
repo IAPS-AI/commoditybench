@@ -13,9 +13,24 @@ Control List (CCL)**, the task BIS performs. Goal: quantify model capability as 
 possible IAPS recommendation about whether BIS should use LLMs for this. Stretch goal:
 RAG over the CCL, evaluated with vs. without retrieval.
 
-## Status (as of 2026-06-26)
+## Status (as of 2026-07-01)
 
-- **Error-mode analysis + future-work doc (NEWEST, analysis-only — no dataset/run changes).**
+- **He-3 gold correction + 34-item re-aggregation + `gen` leaderboard exclusion (NEWEST).**
+  `lnd-2517-he3` gold corrected **1C232 → EAR99** (1C232's Controls note decontrols <1 g He-3;
+  this tube holds ~2.9 mg — see the dataset note). All 8 results files containing the item were
+  re-scored in place with the canonical scorer and their 4 `__summary.json` files regenerated
+  (they had also been missing models: run_eval overwrites the summary per invocation, keeping
+  only the last-run models — regen from the row files fixed both). The worksheet was regenerated.
+  The main leaderboard now pools the **full 34 verified items over 10 runs (456 obs)**; the
+  `gen` ladder run (Opus 4.1–4.7, 23 items only) is **excluded** from pooling and the example
+  explorer (mixed-n distortion — see the NOTE in `aggregate_runs.py`); the ladder lives solely
+  on `generation_trendline.html` (linked from README). Post-correction headline (pooled-34,
+  not equalized): no-tools GPT-5.5 0.485/0.294 > Opus 4.8 0.447/0.302 > GPT-4o > Qwen3-235B;
+  with-tools GPT-5.5 0.691/0.618 > Opus 4.8 0.648/0.559 > Qwen3-235B 0.482/0.353. Numbers in
+  `results/*_findings.md` predate this re-aggregation. Residual caveat: ab/ab2/comparison/
+  qwen3_32b_runpod runs cover only the original 23 items, so pooled cells weight those items
+  more heavily (all cells still cover all 34).
+- **Error-mode analysis + future-work doc (analysis-only — no dataset/run changes).**
   Dug into what the top tooled models (Opus 4.8, GPT-5.5, Qwen3-235B agentic) get wrong. The
   dominant error budget is **Category-5 boundary over-control**, in two clusters: (1)
   **mass-market crypto** — gold `5A992.c` predicted as controlled `5A002` (model identifies the
@@ -47,8 +62,8 @@ RAG over the CCL, evaluated with vs. without retrieval.
   `aggregate_runs.py` + `results_template.html` → `dashboard/index.html`): (1) all-model
   leaderboard tooled+untooled, (2) within-model tool uplift + per-category, (3) mistake
   taxonomy (over/under-classification, wrong subparagraph/entry/category) with ECCN
-  segment-match example cards. **Aggregates across ALL 11 runs (483 obs)** per (model,
-  condition) to damp per-run noise. METR-clean, self-contained, no editorializing; opens with
+  segment-match example cards. **Aggregates across 10 runs (456 obs; `gen` excluded)** per
+  (model, condition) to damp per-run noise. METR-clean, self-contained, no editorializing; opens with
   an exec summary (task / benchmark / why it matters). The old `build_site.py` /
   `build_dashboard.py` were REMOVED (superseded). Regenerate: `py -3.12 scripts/aggregate_runs.py
   && py -3.12 scripts/build_results_site.py`.
@@ -100,8 +115,9 @@ RAG over the CCL, evaluated with vs. without retrieval.
   probe. **No-tools run done** (run-id `gen`, 23 verified, 0 errors): the trendline is
   **flat then dips** — exact 0.35→0.39 across 4.1–4.7, then **4.8 lowest at 0.22** (grade
   0.40); `group`/`category` steady ~0.57–0.61. Newer Opus isn't better at unaided ECCN
-  classification here; over-classification plausibly worsens it. The 4.1→4.8 ladder now also
-  appears in the main leaderboard (pooled). Standalone trendline page:
+  classification here; over-classification plausibly worsens it. (The ladder briefly appeared
+  in the main leaderboard but was excluded 2026-07-01 — 23-item run vs the 34-item pool; it
+  now lives only on the trendline page.) Standalone trendline page:
   `dashboard/generation_trendline.html`; builder `scripts/build_generation_trendline.py`;
   writeup `results/generation_trendline_findings.md`.
 - **Subscription harness for the tools condition (NEW): `cc_harness/`.** Runs the agentic
